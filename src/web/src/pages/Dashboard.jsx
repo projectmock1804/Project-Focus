@@ -2302,7 +2302,7 @@ function DetailStat({ label, value, color }) {
 // =============================================================================
 // Main Dashboard
 // =============================================================================
-export default function Dashboard({ onNavigateToTask, showToast = () => {} }) {
+export default function Dashboard({ onNavigateToTask, showToast = () => {}, onLogout = () => {} }) {
   const [tasks, setTasks] = useState([]);
   const [selectedTask, setSelectedTask] = useState(null);
   const [sessionTotals, setSessionTotals] = useState(null);
