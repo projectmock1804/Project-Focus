@@ -866,6 +866,96 @@ export default function Landing({ onEnterApp }) {
         </div>
       </section>
 
+      {/* Download Desktop App Section */}
+      <section style={{
+        padding: '80px 40px',
+        maxWidth: 1400,
+        margin: '0 auto 40px',
+      }}>
+        <div style={{
+          background: `linear-gradient(135deg, ${C.graphite}, ${C.surface})`,
+          border: `1px solid ${C.border2}`,
+          borderRadius: 16,
+          padding: '60px 40px',
+          textAlign: 'center',
+        }}>
+          <div style={{ fontSize: 48, marginBottom: 16 }}>💻</div>
+          <h2 style={{
+            fontSize: 36,
+            fontFamily: F.title,
+            fontWeight: 600,
+            margin: '0 0 16px 0',
+          }}>
+            Download Desktop App
+          </h2>
+          <p style={{
+            fontSize: 16,
+            color: C.bone40,
+            margin: '0 0 8px',
+            lineHeight: 1.6,
+          }}>
+            The web app manages your tasks. The desktop app watches your back.
+          </p>
+          <p style={{
+            fontSize: 14,
+            color: C.bone20,
+            margin: '0 0 40px',
+          }}>
+            Runs silently in the background. Catches distractions. Shows a popup.
+          </p>
+
+          <div style={{ display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 32 }}>
+            <a
+              href="https://github.com/projectmock1804/Project-Focus/releases/latest/download/Project-Focus-Setup.exe"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 10,
+                fontFamily: F.ui,
+                fontSize: 15,
+                padding: '16px 36px',
+                background: C.moss,
+                border: 'none',
+                borderRadius: 8,
+                color: C.ink,
+                cursor: 'pointer',
+                fontWeight: 700,
+                textDecoration: 'none',
+                boxShadow: '0 8px 24px rgba(107,142,90,0.3)',
+              }}
+            >
+              <span>⬇</span> Download for Windows
+            </a>
+            <button onClick={onEnterApp} style={{
+              fontFamily: F.ui,
+              fontSize: 15,
+              padding: '16px 36px',
+              background: 'transparent',
+              border: `1px solid ${C.border2}`,
+              borderRadius: 8,
+              color: C.bone,
+              cursor: 'pointer',
+              fontWeight: 500,
+            }}>
+              Use Web Only →
+            </button>
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'center', gap: 32, flexWrap: 'wrap' }}>
+            {[
+              { icon: '🔕', text: 'No terminal window' },
+              { icon: '🤫', text: 'Silent background process' },
+              { icon: '⚡', text: 'Instant distraction alerts' },
+              { icon: '🪟', text: 'Windows 10/11' },
+            ].map(item => (
+              <div key={item.text} style={{ display: 'flex', alignItems: 'center', gap: 8, fontFamily: F.ui, fontSize: 13, color: C.bone40 }}>
+                <span>{item.icon}</span> {item.text}
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* CTA */}
       <section style={{
         padding: '80px 40px',

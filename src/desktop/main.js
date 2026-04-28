@@ -18,9 +18,14 @@ const fs = require('fs');
 // ---------------------------------------------------------------------------
 // Config
 // ---------------------------------------------------------------------------
-const WEB_URL = 'http://localhost:5174';
+const IS_PACKAGED = app.isPackaged;
+const PROD_WEB_URL = 'https://project-focus-mo3i.onrender.com';
+const DEV_WEB_URL = 'http://localhost:5174';
+const WEB_URL = IS_PACKAGED ? PROD_WEB_URL : DEV_WEB_URL;
 const API_PORT = 3000;
-const ROOT_DIR = path.resolve(__dirname, '../..');
+const ROOT_DIR = IS_PACKAGED
+  ? path.join(process.resourcesPath, 'app')
+  : path.resolve(__dirname, '../..');
 
 let mainWindow = null;
 let popupWindow = null;
@@ -93,42 +98,57 @@ function startApiServer() {
 
 // ---------------------------------------------------------------------------
 // Spawn PC agent
+// In production: uses Electron's utilityProcess (no external node.exe needed)
+// In dev: spawns external node process
 // ---------------------------------------------------------------------------
 function startAgent() {
   const agentPath = path.join(ROOT_DIR, 'src/agent/windows-monitor.js');
   if (!fs.existsSync(agentPath)) {
-    console.error('[Desktop] windows-monitor.js not found');
+    console.error('[Desktop] windows-monitor.js not found at', agentPath);
     return;
   }
 
-  agentProcess = spawn('node', [agentPath], {
-    cwd: ROOT_DIR,
-    env: {
-      ...process.env,
-      ELECTRON_IPC: '1',        // signal to agent that it should use IPC popup
-    },
-    stdio: ['pipe', 'pipe', 'pipe'],  // stdin as pipe so we can send task ID
-  });
+  const agentEnv = {
+    ...process.env,
+    ELECTRON_IPC: '1',
+    SERVER_BASE_URL: IS_PACKAGED
+      ? 'https://project-focus-mo3i.onrender.com'
+      : (process.env.SERVER_BASE_URL || 'http://localhost:3000'),
+  };
 
-  agentProcess.stdout.on('data', (d) => {
-    try {
-      process.stdout.write('[Agent] ' + d);
-    } catch (err) {
-      // Ignore write errors (stdout may be closed)
-    }
-  });
-  agentProcess.stderr.on('data', (d) => {
-    try {
-      process.stderr.write('[Agent:ERR] ' + d);
-    } catch (err) {
-      // Ignore write errors (stderr may be closed)
-    }
-  });
-  agentProcess.on('error', (err) => {
-    console.error('[Desktop] Agent process error:', err.message);
-  });
-  agentProcess.on('exit', (code) => console.log(`[Desktop] Agent exited (code=${code})`));
-  console.log('[Desktop] PC agent spawned (pid=' + agentProcess.pid + ')');
+  if (IS_PACKAGED) {
+    // Production: use Electron's built-in Node.js via utilityProcess
+    const { utilityProcess } = require('electron');
+    agentProcess = utilityProcess.fork(agentPath, [], {
+      env: agentEnv,
+      serviceName: 'Project Focus Agent',
+      stdio: 'pipe',
+    });
+    agentProcess.stdout.on('data', (d) => {
+      try { process.stdout.write('[Agent] ' + d); } catch {}
+    });
+    agentProcess.stderr.on('data', (d) => {
+      try { process.stderr.write('[Agent:ERR] ' + d); } catch {}
+    });
+    agentProcess.on('exit', (code) => console.log(`[Desktop] Agent exited (code=${code})`));
+    console.log('[Desktop] PC agent started via utilityProcess');
+  } else {
+    // Dev: spawn as external node process
+    agentProcess = spawn('node', [agentPath], {
+      cwd: ROOT_DIR,
+      env: agentEnv,
+      stdio: ['pipe', 'pipe', 'pipe'],
+    });
+    agentProcess.stdout.on('data', (d) => {
+      try { process.stdout.write('[Agent] ' + d); } catch {}
+    });
+    agentProcess.stderr.on('data', (d) => {
+      try { process.stderr.write('[Agent:ERR] ' + d); } catch {}
+    });
+    agentProcess.on('error', (err) => console.error('[Desktop] Agent error:', err.message));
+    agentProcess.on('exit', (code) => console.log(`[Desktop] Agent exited (code=${code})`));
+    console.log('[Desktop] PC agent spawned (pid=' + agentProcess.pid + ')');
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -474,32 +494,39 @@ function startIpcServer() {
 // App lifecycle
 // ---------------------------------------------------------------------------
 app.whenReady().then(async () => {
-  console.log('[Desktop] App ready — starting services...');
+  console.log('[Desktop] App ready — starting services... (packaged=' + IS_PACKAGED + ')');
 
   setupElectronIPC();
   setupStaticServer();
   startIpcServer();
-  startApiServer();
 
-  // Wait for API server to be ready, then start agent
-  try {
-    await waitForPort(API_PORT, 20000);
-    console.log('[Desktop] API server is ready');
+  if (IS_PACKAGED) {
+    // Production: no local API server (uses hosted render.com)
+    // Start agent immediately
     startAgent();
-  } catch (err) {
-    console.warn('[Desktop] API server did not start in time:', err.message);
-    startAgent(); // start agent anyway
-  }
+    createMainWindow();
+  } else {
+    // Dev: start local API server and wait for Vite
+    startApiServer();
 
-  // Wait for web dev server
-  try {
-    await waitForPort(5173, 30000);
-    console.log('[Desktop] Vite dev server is ready');
-  } catch {
-    console.warn('[Desktop] Vite dev server not detected — loading anyway');
-  }
+    try {
+      await waitForPort(API_PORT, 20000);
+      console.log('[Desktop] API server is ready');
+      startAgent();
+    } catch (err) {
+      console.warn('[Desktop] API server did not start in time:', err.message);
+      startAgent();
+    }
 
-  createMainWindow();
+    try {
+      await waitForPort(5173, 30000);
+      console.log('[Desktop] Vite dev server is ready');
+    } catch {
+      console.warn('[Desktop] Vite dev server not detected — loading anyway');
+    }
+
+    createMainWindow();
+  }
 });
 
 app.on('window-all-closed', () => {

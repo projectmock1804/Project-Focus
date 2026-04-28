@@ -16,7 +16,45 @@
     "install:all": "npm install && npm run web:install",
     "desktop": "concurrently --kill-others-on-fail --names \"WEB,ELECTRON\" --prefix-colors \"cyan,yellow\" \"npm run web\" \"wait-on http-get://localhost:5173 && electron src/desktop/main.js\"",
     "desktop:start": "electron src/desktop/main.js",
+    "build:electron": "electron-builder --win",
     "test": "echo \"No tests configured yet\""
+  },
+  "build": {
+    "appId": "com.projectfocus.app",
+    "productName": "Project Focus",
+    "directories": {
+      "output": "dist-electron"
+    },
+    "files": [
+      "index.js",
+      "launcher.js",
+      "src/**/*",
+      "!src/web/src/**",
+      "!src/web/public/**",
+      "!src/web/vite.config.js",
+      "!src/web/index.html",
+      "!src/web/node_modules/**",
+      "node_modules/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": ".env",
+        "to": ".env"
+      }
+    ],
+    "win": {
+      "target": [{ "target": "nsis", "arch": ["x64"] }],
+      "icon": "src/desktop/icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Project Focus"
+    },
+    "asar": true
   },
   "keywords": [
     "productivity",
@@ -44,6 +82,7 @@
   "devDependencies": {
     "concurrently": "^9.2.1",
     "electron": "^35.7.5",
+    "electron-builder": "^25.1.8",
     "wait-on": "^8.0.5"
   }
 }

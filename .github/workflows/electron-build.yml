@@ -1,0 +1,62 @@
+name: Build & Release Desktop App
+
+on:
+  push:
+    tags:
+      - 'v*'   # Trigger on version tags like v1.0.0
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install root dependencies
+        run: npm install
+
+      - name: Install web dependencies
+        run: cd src/web && npm install
+
+      - name: Build web app
+        run: npm run web:build
+
+      - name: Create .env for build
+        run: |
+          echo "SERVER_BASE_URL=https://project-focus-mo3i.onrender.com" > .env
+          echo "NODE_ENV=production" >> .env
+
+      - name: Build Electron app
+        run: npm run build:electron
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Release Asset
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist-electron/*.exe
+          name: Project Focus ${{ github.ref_name }}
+          body: |
+            ## Project Focus Desktop App ${{ github.ref_name }}
+
+            ### Download
+            - **Windows**: Download `Project-Focus-Setup.exe` below
+
+            ### What's included
+            - Silent background activity monitoring
+            - Distraction popups (YouTube, Reddit, social media, etc.)
+            - Connects to your Project Focus account at project-focus-mo3i.onrender.com
+
+            ### Setup
+            1. Download and run the installer
+            2. Sign in with your Project Focus account
+            3. The app monitors in the background — no terminal needed
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

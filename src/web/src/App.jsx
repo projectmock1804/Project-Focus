@@ -6,25 +6,34 @@ import Auth from './pages/Auth.jsx';
 import Admin from './pages/Admin.jsx';
 import { useToast } from './hooks/useToast.js';
 import { ToastProvider } from './components/Toast.jsx';
+import { auth } from './firebase.js';
+import { onAuthStateChanged } from 'firebase/auth';
 
 export default function App() {
   const [view, setView] = useState({ page: 'landing', taskId: null });
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userId, setUserId] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [authLoading, setAuthLoading] = useState(true);
   const { toasts, showToast } = useToast();
 
-  // Check authentication on mount
+  // Firebase auth state listener — persists sessions across page refreshes
   useEffect(() => {
-    const storedUserId = localStorage.getItem('userId');
-    const authToken = localStorage.getItem('authToken');
-    const isAdminUser = localStorage.getItem('isAdmin') === 'true';
-
-    if (storedUserId && authToken) {
-      setIsAuthenticated(true);
-      setUserId(storedUserId);
-      setIsAdmin(isAdminUser);
-    }
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        const isAdminUser = localStorage.getItem('isAdmin') === 'true';
+        setIsAuthenticated(true);
+        setUserId(user.uid);
+        setIsAdmin(isAdminUser);
+        localStorage.setItem('userId', user.uid);
+      } else {
+        setIsAuthenticated(false);
+        setUserId(null);
+        setIsAdmin(false);
+      }
+      setAuthLoading(false);
+    });
+    return () => unsubscribe();
   }, []);
 
   function handleSignIn(uid) {
@@ -64,6 +73,14 @@ export default function App() {
 
   function navigateToLanding() {
     setView({ page: 'landing', taskId: null });
+  }
+
+  if (authLoading) {
+    return (
+      <div style={{ display: 'flex', height: '100vh', alignItems: 'center', justifyContent: 'center', background: '#0E0E0C' }}>
+        <div style={{ color: 'rgba(242,240,235,0.4)', fontFamily: 'Inter, sans-serif', fontSize: 14 }}>Loading...</div>
+      </div>
+    );
   }
 
   const renderPage = () => {
