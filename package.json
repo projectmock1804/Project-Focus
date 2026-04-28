@@ -1,0 +1,47 @@
+{
+  "name": "project-focus",
+  "version": "1.0.0",
+  "description": "Project Focus MVP - AI-powered focus tracker with Telegram, Gemini, and local JSON DB",
+  "main": "index.js",
+  "scripts": {
+    "start": "node launcher.js",
+    "api": "node index.js",
+    "dev": "node --watch index.js",
+    "launcher": "node launcher.js",
+    "bot": "node src/bot/telegram.js",
+    "agent": "node src/agent/windows-monitor.js",
+    "web": "cd src/web && npm run dev",
+    "web:build": "cd src/web && npm run build",
+    "web:install": "cd src/web && npm install",
+    "install:all": "npm install && npm run web:install",
+    "desktop": "concurrently --kill-others-on-fail --names \"WEB,ELECTRON\" --prefix-colors \"cyan,yellow\" \"npm run web\" \"wait-on http-get://localhost:5173 && electron src/desktop/main.js\"",
+    "desktop:start": "electron src/desktop/main.js",
+    "test": "echo \"No tests configured yet\""
+  },
+  "keywords": [
+    "productivity",
+    "focus",
+    "telegram",
+    "gemini",
+    "electron"
+  ],
+  "author": "박민철 <projectmock1804@gmail.com>",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.36.3",
+    "axios": "^1.15.2",
+    "cors": "^2.8.5",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "google-auth-library": "^10.6.2",
+    "googleapis": "^171.4.0",
+    "node-notifier": "^10.0.1",
+    "node-telegram-bot-api": "^0.67.0"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1",
+    "electron": "^35.7.5",
+    "wait-on": "^8.0.5"
+  }
+}

@@ -1,0 +1,124 @@
+/* =============================================================================
+   Project Focus — Global Styles (dark theme)
+   Background: #0E0E0C (Ink) | Surface: #1C1C19 (Graphite)
+   Text: #F2F0EB (Bone) | Accent: #E86B3A (Ember) | Success: #6B8E5A (Moss)
+   Fonts: Fraunces italic (titles) | Inter (UI) | JetBrains Mono (data)
+   ============================================================================= */
+
+:root {
+  --ink: #0E0E0C;
+  --graphite: #1C1C19;
+  --surface: #252520;
+  --bone: #F2F0EB;
+  --ember: #E86B3A;
+  --moss: #6B8E5A;
+
+  --bone-40: rgba(242, 240, 235, 0.40);
+  --bone-20: rgba(242, 240, 235, 0.20);
+  --bone-10: rgba(242, 240, 235, 0.08);
+  --ember-20: rgba(232, 107, 58, 0.18);
+  --ember-10: rgba(232, 107, 58, 0.10);
+  --moss-20: rgba(107, 142, 90, 0.18);
+  --moss-10: rgba(107, 142, 90, 0.10);
+  --border: rgba(242, 240, 235, 0.06);
+  --border-2: rgba(242, 240, 235, 0.10);
+
+  --font-title: 'Fraunces', Georgia, serif;
+  --font-ui: 'Inter', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.2);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.4), 0 2px 4px rgba(0,0,0,0.2);
+  --shadow-lg: 0 12px 32px rgba(0,0,0,0.5), 0 4px 8px rgba(0,0,0,0.3);
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-ui);
+  background-color: var(--ink);
+  color: var(--bone);
+  line-height: 1.5;
+  min-height: 100vh;
+}
+
+#root {
+  height: 100vh;
+}
+
+h1, h2, h3 {
+  font-family: var(--font-title);
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+code, .mono {
+  font-family: var(--font-mono);
+}
+
+button {
+  font-family: var(--font-ui);
+  cursor: pointer;
+}
+
+input, textarea {
+  font-family: var(--font-ui);
+  color: var(--bone);
+}
+
+input::placeholder {
+  color: var(--bone-40);
+}
+
+a {
+  color: var(--ember);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--graphite);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-2);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--bone-20);
+}
+
+/* Animations */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
