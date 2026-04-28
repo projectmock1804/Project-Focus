@@ -6,6 +6,7 @@ delete require.cache[require.resolve('../llm/estimator')];
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 const { parseTask, estimateProgress } = require('../llm/estimator');
 const {
   createTask,
@@ -652,8 +653,8 @@ async function createApp() {
   // Middleware ordering is important
   app.use(express.json({ limit: '10mb' }));
   app.use(cors({
-    origin: ['http://localhost:5173', 'http://127.0.0.1:5173', 'file://'],
-    credentials: true,
+    origin: '*',
+    credentials: false,
   }));
 
   // Security headers
@@ -661,15 +662,19 @@ async function createApp() {
     res.setHeader('X-Content-Type-Options', 'nosniff');
     res.setHeader('X-Frame-Options', 'DENY');
     res.setHeader('X-XSS-Protection', '1; mode=block');
-    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
     next();
   });
 
+  // API routes
   app.use('/api', router);
 
-  // 404 fallback
-  app.use((_req, res) => {
-    res.status(404).json({ error: 'Not found' });
+  // Serve React frontend static files
+  const distPath = path.join(__dirname, '../../src/web/dist');
+  app.use(express.static(distPath));
+
+  // SPA fallback - serve index.html for all non-API routes
+  app.get('*', (_req, res) => {
+    res.sendFile(path.join(distPath, 'index.html'));
   });
 
   // Global error handler (must be last)
