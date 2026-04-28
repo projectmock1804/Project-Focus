@@ -2338,13 +2338,19 @@ export default function Dashboard({ onNavigateToTask, showToast = () => {}, onLo
 
   const deleteSelectedTasks = useCallback(async () => {
     if (selectedIds.size === 0) return;
-    await Promise.all([...selectedIds].map(id =>
-      fetch(`/api/task/${id}/delete`, { method: 'POST' })
-    ));
-    setSelectedIds(new Set());
-    setSelectedTask(null);
-    fetchTasks();
-  }, [selectedIds, fetchTasks]);
+    try {
+      await Promise.all([...selectedIds].map(id =>
+        fetch(`/api/task/${id}/delete`, { method: 'POST' })
+      ));
+      setSelectedIds(new Set());
+      setSelectedTask(null);
+      showToast(`${selectedIds.size}개 작업이 삭제되었습니다`, 'success');
+      fetchTasks();
+    } catch (err) {
+      showToast('작업 삭제에 실패했습니다', 'error');
+      console.error('Delete error:', err);
+    }
+  }, [selectedIds, fetchTasks, showToast]);
 
   const onReorder = useCallback(async (draggedTaskId, targetTaskId) => {
     try {
@@ -2402,11 +2408,13 @@ export default function Dashboard({ onNavigateToTask, showToast = () => {}, onLo
 
       console.log('API updates successful, fetching tasks...');
       await fetchTasks();
+      showToast('우선순위가 변경되었습니다', 'success');
       console.log('=== REORDER COMPLETE ===');
     } catch (err) {
       console.error('Reorder exception:', err);
+      showToast('우선순위 변경에 실패했습니다', 'error');
     }
-  }, [tasks, fetchTasks]);
+  }, [tasks, fetchTasks, showToast]);
 
   const fetchTaskProgress = useCallback(async (taskId) => {
     try {
@@ -2818,10 +2826,12 @@ export default function Dashboard({ onNavigateToTask, showToast = () => {}, onLo
 
                   setShowFormModal(false);
                   setFormSubmitting(false);
+                  showToast(`"${formData.title}" 작업이 생성되었습니다`, 'success');
                   setTimeout(() => fetchTasks(), 500);
                 } catch (err) {
                   setFormSubmitting(false);
-                  throw err;
+                  showToast(err.message || '작업 생성에 실패했습니다', 'error');
+                  console.error('Form submission error:', err);
                 }
               }}
               onCancel={() => setShowFormModal(false)}
