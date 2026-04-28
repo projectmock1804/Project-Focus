@@ -18,8 +18,12 @@ const {
   logSession,
   getTaskSessionTotals,
   createRawTaskRequest,
-  ensureSheets,
-} = require('../db/local-memory');
+  incrementUserStats,
+  getAdminStats,
+  recordComplaint,
+  getComplaints,
+  ensureIndexes,
+} = require('../db/firebase');
 
 const router = express.Router();
 
@@ -41,6 +45,66 @@ router.use((req, _res, next) => {
 });
 
 console.log('[API] Router initialization complete');
+
+// =============================================================================
+// Authentication Endpoints
+// =============================================================================
+router.post('/auth/signup', async (req, res) => {
+  const { email, password, displayName } = req.body;
+
+  if (!email || !password || !displayName) {
+    return res.status(400).json({ error: 'email, password, and displayName are required' });
+  }
+
+  try {
+    const { signUpUser } = require('../db/firebase');
+    const userRecord = await signUpUser(email, password, displayName);
+
+    // Generate a simple token (in production, use JWT)
+    const token = Buffer.from(userRecord.uid).toString('base64');
+
+    res.json({
+      userId: userRecord.uid,
+      email: userRecord.email,
+      displayName: userRecord.displayName,
+      token,
+    });
+  } catch (err) {
+    console.error('[API] /auth/signup error:', err);
+    res.status(400).json({ error: err.message });
+  }
+});
+
+router.post('/auth/signin', async (req, res) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json({ error: 'email and password are required' });
+  }
+
+  try {
+    const { getUserByEmail } = require('../db/firebase');
+    const userRecord = await getUserByEmail(email);
+
+    if (!userRecord) {
+      return res.status(401).json({ error: 'Invalid email or password' });
+    }
+
+    // Note: Password verification should be done via Firebase Auth
+    // This is a simplified version - use Firebase SDK in production
+    const token = Buffer.from(userRecord.uid).toString('base64');
+
+    res.json({
+      userId: userRecord.uid,
+      email: userRecord.email,
+      displayName: userRecord.displayName || '',
+      token,
+    });
+  } catch (err) {
+    console.error('[API] /auth/signin error:', err);
+    res.status(400).json({ error: err.message });
+  }
+});
 
 // =============================================================================
 // POST /api/task/parse
@@ -530,6 +594,46 @@ router.get('/distractions/today', (_req, res) => {
 });
 
 // =============================================================================
+// Admin endpoints
+// =============================================================================
+router.get('/admin/stats', async (_req, res) => {
+  try {
+    const stats = await getAdminStats();
+    res.json(stats);
+  } catch (err) {
+    console.error('[API] /admin/stats error:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.get('/admin/complaints', async (_req, res) => {
+  try {
+    const complaints = await getComplaints();
+    res.json({ complaints });
+  } catch (err) {
+    console.error('[API] /admin/complaints error:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post('/complaint', async (req, res) => {
+  const { userId, complaint } = req.body;
+
+  if (!complaint || typeof complaint !== 'string') {
+    return res.status(400).json({ error: 'complaint text is required' });
+  }
+
+  try {
+    const { recordComplaint } = require('../db/firebase');
+    const complaintId = await recordComplaint(userId || 'anonymous', complaint);
+    res.json({ ok: true, complaintId });
+  } catch (err) {
+    console.error('[API] /complaint error:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// =============================================================================
 // Health check
 // =============================================================================
 router.get('/health', (_req, res) => {
@@ -539,11 +643,11 @@ router.get('/health', (_req, res) => {
 // =============================================================================
 // Express app factory
 // =============================================================================
-function createApp() {
+async function createApp() {
   const app = express();
 
-  // Initialize database and priorities
-  ensureSheets();
+  // Initialize Firebase indexes
+  await ensureIndexes();
 
   // Middleware ordering is important
   app.use(express.json({ limit: '10mb' }));

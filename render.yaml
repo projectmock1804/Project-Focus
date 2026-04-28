@@ -1,0 +1,45 @@
+services:
+  # Backend API service
+  - type: web
+    name: project-focus-api
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: node index.js
+    envVars:
+      - key: PORT
+        value: "3000"
+      - key: NODE_ENV
+        value: production
+      - key: FIREBASE_PROJECT_ID
+        fromDatabase:
+          name: firebase-config
+          property: projectId
+      - key: FIREBASE_SERVICE_ACCOUNT
+        fromDatabase:
+          name: firebase-config
+          property: serviceAccount
+
+  # Frontend web app service
+  - type: static
+    name: project-focus-web
+    buildCommand: cd src/web && npm install && npm run build
+    staticPublishPath: src/web/dist
+    routes:
+      - path: /api/*
+        destination: project-focus-api
+      - path: /*
+        destination: /index.html
+
+databases:
+  - name: firebase-config
+    plan: free
+
+# Build configuration
+buildPlan:
+  - name: Install root dependencies
+    command: npm install
+  - name: Install web dependencies
+    command: cd src/web && npm install
+  - name: Build web app
+    command: cd src/web && npm run build

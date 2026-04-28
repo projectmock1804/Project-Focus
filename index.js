@@ -6,7 +6,7 @@ const { createApp } = require('./src/server/api');
 const PORT = parseInt(process.env.PORT, 10) || 3000;
 
 async function main() {
-  const app = createApp();
+  const app = await createApp();
 
   app.listen(PORT, () => {
     console.log(`[Server] Project Focus API running at http://localhost:${PORT}`);
