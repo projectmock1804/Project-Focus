@@ -24,6 +24,8 @@ const {
   recordComplaint,
   getComplaints,
   ensureIndexes,
+  signUpUser,
+  ensureUser,
 } = require('../db/firebase');
 
 const router = express.Router();
@@ -49,60 +51,36 @@ console.log('[API] Router initialization complete');
 
 // =============================================================================
 // Authentication Endpoints
+// Auth is handled client-side via Firebase SDK.
+// These endpoints sync the user doc to Firestore after client-side auth.
 // =============================================================================
+
+// Called after email/password signup (Firebase Auth user already created client-side)
 router.post('/auth/signup', async (req, res) => {
-  const { email, password, displayName } = req.body;
-
-  if (!email || !password || !displayName) {
-    return res.status(400).json({ error: 'email, password, and displayName are required' });
+  const { uid, email, displayName } = req.body;
+  if (!uid || !email) {
+    return res.status(400).json({ error: 'uid and email are required' });
   }
-
   try {
-    const { signUpUser } = require('../db/firebase');
-    const userRecord = await signUpUser(email, password, displayName);
-
-    // Generate a simple token (in production, use JWT)
-    const token = Buffer.from(userRecord.uid).toString('base64');
-
-    res.json({
-      userId: userRecord.uid,
-      email: userRecord.email,
-      displayName: userRecord.displayName,
-      token,
-    });
+    await signUpUser(uid, email, displayName || email.split('@')[0]);
+    res.json({ success: true, userId: uid });
   } catch (err) {
     console.error('[API] /auth/signup error:', err);
     res.status(400).json({ error: err.message });
   }
 });
 
-router.post('/auth/signin', async (req, res) => {
-  const { email, password } = req.body;
-
-  if (!email || !password) {
-    return res.status(400).json({ error: 'email and password are required' });
+// Called after any sign-in (email/password or Google) — upserts Firestore user doc
+router.post('/auth/ensure-user', async (req, res) => {
+  const { uid, email, displayName } = req.body;
+  if (!uid || !email) {
+    return res.status(400).json({ error: 'uid and email are required' });
   }
-
   try {
-    const { getUserByEmail } = require('../db/firebase');
-    const userRecord = await getUserByEmail(email);
-
-    if (!userRecord) {
-      return res.status(401).json({ error: 'Invalid email or password' });
-    }
-
-    // Note: Password verification should be done via Firebase Auth
-    // This is a simplified version - use Firebase SDK in production
-    const token = Buffer.from(userRecord.uid).toString('base64');
-
-    res.json({
-      userId: userRecord.uid,
-      email: userRecord.email,
-      displayName: userRecord.displayName || '',
-      token,
-    });
+    await ensureUser(uid, email, displayName || email.split('@')[0]);
+    res.json({ success: true, userId: uid });
   } catch (err) {
-    console.error('[API] /auth/signin error:', err);
+    console.error('[API] /auth/ensure-user error:', err);
     res.status(400).json({ error: err.message });
   }
 });

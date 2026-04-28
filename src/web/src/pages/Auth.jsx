@@ -1,4 +1,11 @@
 import React, { useState } from 'react';
+import {
+  auth,
+  googleProvider,
+  signInWithPopup,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+} from '../firebase';
 
 const C = {
   ink: '#0E0E0C',
@@ -16,85 +23,116 @@ const C = {
 const F = {
   display: '"Fraunces", serif',
   ui: '"Inter", sans-serif',
-  mono: '"JetBrains Mono", monospace',
 };
 
+// Sync user to Firestore after Firebase Auth
+async function syncUser(uid, email, displayName) {
+  try {
+    await fetch('/api/auth/ensure-user', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ uid, email, displayName }),
+    });
+  } catch (err) {
+    console.error('Failed to sync user:', err);
+  }
+}
+
 export default function Auth({ onSignIn }) {
-  const [mode, setMode] = useState('signin'); // 'signin' or 'signup'
+  const [mode, setMode] = useState('signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  async function handleSignIn(e) {
+  function friendlyError(code) {
+    const map = {
+      'auth/user-not-found': 'No account found with this email.',
+      'auth/wrong-password': 'Incorrect password.',
+      'auth/invalid-credential': 'Incorrect email or password.',
+      'auth/email-already-in-use': 'An account with this email already exists.',
+      'auth/weak-password': 'Password must be at least 6 characters.',
+      'auth/invalid-email': 'Please enter a valid email address.',
+      'auth/popup-closed-by-user': 'Sign-in popup was closed.',
+      'auth/cancelled-popup-request': 'Sign-in was cancelled.',
+    };
+    return map[code] || 'Something went wrong. Please try again.';
+  }
+
+  async function handleEmailAuth(e) {
     e.preventDefault();
     setError('');
     setLoading(true);
 
     try {
-      // Note: In production, use Firebase SDK for client-side auth
-      // This is a placeholder for the auth flow
-      const response = await fetch('/api/auth/signin', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      });
+      let userCredential;
 
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Sign in failed');
+      if (mode === 'signup') {
+        userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const { uid, email: userEmail } = userCredential.user;
+        await syncUser(uid, userEmail, displayName || email.split('@')[0]);
+      } else {
+        userCredential = await signInWithEmailAndPassword(auth, email, password);
+      }
 
-      // Store token and user info
-      localStorage.setItem('authToken', data.token);
-      localStorage.setItem('userId', data.userId);
-      localStorage.setItem('displayName', data.displayName);
-
-      onSignIn(data.userId);
+      const { uid } = userCredential.user;
+      localStorage.setItem('userId', uid);
+      localStorage.setItem('displayName', userCredential.user.displayName || displayName || email.split('@')[0]);
+      onSignIn(uid);
     } catch (err) {
-      setError(err.message);
+      setError(friendlyError(err.code));
     } finally {
       setLoading(false);
     }
   }
 
-  async function handleSignUp(e) {
-    e.preventDefault();
+  async function handleGoogleSignIn() {
     setError('');
     setLoading(true);
 
     try {
-      const response = await fetch('/api/auth/signup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, displayName }),
-      });
-
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Sign up failed');
-
-      // Store token and user info
-      localStorage.setItem('authToken', data.token);
-      localStorage.setItem('userId', data.userId);
-      localStorage.setItem('displayName', data.displayName);
-
-      onSignIn(data.userId);
+      const result = await signInWithPopup(auth, googleProvider);
+      const { uid, email: userEmail, displayName: googleName } = result.user;
+      await syncUser(uid, userEmail, googleName);
+      localStorage.setItem('userId', uid);
+      localStorage.setItem('displayName', googleName || userEmail.split('@')[0]);
+      onSignIn(uid);
     } catch (err) {
-      setError(err.message);
+      if (err.code !== 'auth/popup-closed-by-user' && err.code !== 'auth/cancelled-popup-request') {
+        setError(friendlyError(err.code));
+      }
     } finally {
       setLoading(false);
     }
   }
+
+  const inputStyle = {
+    width: '100%',
+    padding: '12px',
+    fontFamily: F.ui,
+    fontSize: 14,
+    background: C.surface,
+    border: `1px solid ${C.border2}`,
+    borderRadius: 6,
+    color: C.bone,
+    boxSizing: 'border-box',
+    outline: 'none',
+  };
+
+  const labelStyle = {
+    fontFamily: F.ui,
+    fontSize: 12,
+    color: C.bone40,
+    display: 'block',
+    marginBottom: 6,
+    textTransform: 'uppercase',
+    letterSpacing: '0.08em',
+  };
 
   return (
-    <div
-      style={{
-        display: 'flex',
-        height: '100vh',
-        background: C.ink,
-        color: C.bone,
-      }}
-    >
-      {/* Left side - Branding */}
+    <div style={{ display: 'flex', height: '100vh', background: C.ink, color: C.bone }}>
+      {/* Left — Branding */}
       <div
         style={{
           flex: 1,
@@ -106,15 +144,22 @@ export default function Auth({ onSignIn }) {
           padding: '60px 40px',
         }}
       >
-        <h1 style={{ fontFamily: F.display, fontSize: 48, margin: '0 0 24px 0' }}>
+        <h1 style={{ fontFamily: F.display, fontSize: 52, margin: '0 0 20px 0', letterSpacing: '-0.02em' }}>
           Project Focus
         </h1>
-        <p style={{ fontFamily: F.ui, fontSize: 16, color: C.bone40, margin: 0, textAlign: 'center' }}>
-          깊은 집중력으로 진정한 생산성을 경험하세요
+        <p style={{ fontFamily: F.ui, fontSize: 16, color: C.bone40, margin: 0, textAlign: 'center', lineHeight: 1.6 }}>
+          Deep focus. Real productivity.
         </p>
+        <div style={{ marginTop: 60, display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {['AI-powered task planning', 'Progress tracking', 'Focus session analytics'].map(f => (
+            <div key={f} style={{ display: 'flex', alignItems: 'center', gap: 10, fontFamily: F.ui, fontSize: 13, color: C.bone40 }}>
+              <span style={{ color: C.moss, fontSize: 16 }}>✓</span> {f}
+            </div>
+          ))}
+        </div>
       </div>
 
-      {/* Right side - Auth Form */}
+      {/* Right — Form */}
       <div
         style={{
           flex: 1,
@@ -125,83 +170,90 @@ export default function Auth({ onSignIn }) {
           padding: '60px 40px',
         }}
       >
-        <div style={{ width: '100%', maxWidth: 400 }}>
-          <h2 style={{ fontFamily: F.display, fontSize: 32, margin: '0 0 32px 0' }}>
-            {mode === 'signin' ? '로그인' : '가입하기'}
+        <div style={{ width: '100%', maxWidth: 380 }}>
+          <h2 style={{ fontFamily: F.display, fontSize: 32, margin: '0 0 8px 0' }}>
+            {mode === 'signin' ? 'Welcome back' : 'Create account'}
           </h2>
+          <p style={{ fontFamily: F.ui, fontSize: 14, color: C.bone40, margin: '0 0 32px 0' }}>
+            {mode === 'signin' ? 'Sign in to continue.' : 'Get started for free.'}
+          </p>
 
-          <form onSubmit={mode === 'signin' ? handleSignIn : handleSignUp}>
+          {/* Google Sign-In */}
+          <button
+            onClick={handleGoogleSignIn}
+            disabled={loading}
+            style={{
+              width: '100%',
+              padding: '12px',
+              fontFamily: F.ui,
+              fontSize: 14,
+              fontWeight: 500,
+              background: C.surface,
+              color: C.bone,
+              border: `1px solid ${C.border2}`,
+              borderRadius: 6,
+              cursor: loading ? 'not-allowed' : 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 10,
+              marginBottom: 20,
+              opacity: loading ? 0.6 : 1,
+            }}
+          >
+            <svg width="18" height="18" viewBox="0 0 18 18">
+              <path fill="#4285F4" d="M16.51 8H8.98v3h4.3c-.18 1-.74 1.48-1.6 2.04v2.01h2.6a7.8 7.8 0 0 0 2.38-5.88c0-.57-.05-.66-.15-1.18z"/>
+              <path fill="#34A853" d="M8.98 17c2.16 0 3.97-.72 5.3-1.94l-2.6-2a4.8 4.8 0 0 1-7.18-2.54H1.83v2.07A8 8 0 0 0 8.98 17z"/>
+              <path fill="#FBBC05" d="M4.5 10.52a4.8 4.8 0 0 1 0-3.04V5.41H1.83a8 8 0 0 0 0 7.18l2.67-2.07z"/>
+              <path fill="#EA4335" d="M8.98 4.18c1.17 0 2.23.4 3.06 1.2l2.3-2.3A8 8 0 0 0 1.83 5.4L4.5 7.49a4.77 4.77 0 0 1 4.48-3.3z"/>
+            </svg>
+            Continue with Google
+          </button>
+
+          {/* Divider */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
+            <div style={{ flex: 1, height: 1, background: C.border }} />
+            <span style={{ fontFamily: F.ui, fontSize: 11, color: C.bone40 }}>or</span>
+            <div style={{ flex: 1, height: 1, background: C.border }} />
+          </div>
+
+          {/* Email/Password Form */}
+          <form onSubmit={handleEmailAuth}>
             {mode === 'signup' && (
-              <div style={{ marginBottom: 20 }}>
-                <label style={{ fontFamily: F.ui, fontSize: 12, display: 'block', marginBottom: 8 }}>
-                  이름
-                </label>
+              <div style={{ marginBottom: 16 }}>
+                <label style={labelStyle}>Name</label>
                 <input
                   type="text"
                   value={displayName}
-                  onChange={(e) => setDisplayName(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '12px',
-                    fontFamily: F.ui,
-                    fontSize: 14,
-                    background: C.surface,
-                    border: `1px solid ${C.border2}`,
-                    borderRadius: 6,
-                    color: C.bone,
-                    boxSizing: 'border-box',
-                  }}
+                  onChange={e => setDisplayName(e.target.value)}
+                  style={inputStyle}
                   placeholder="Your name"
-                  required
                 />
               </div>
             )}
 
-            <div style={{ marginBottom: 20 }}>
-              <label style={{ fontFamily: F.ui, fontSize: 12, display: 'block', marginBottom: 8 }}>
-                이메일
-              </label>
+            <div style={{ marginBottom: 16 }}>
+              <label style={labelStyle}>Email</label>
               <input
                 type="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '12px',
-                  fontFamily: F.ui,
-                  fontSize: 14,
-                  background: C.surface,
-                  border: `1px solid ${C.border2}`,
-                  borderRadius: 6,
-                  color: C.bone,
-                  boxSizing: 'border-box',
-                }}
+                onChange={e => setEmail(e.target.value)}
+                style={inputStyle}
                 placeholder="you@example.com"
                 required
               />
             </div>
 
             <div style={{ marginBottom: 24 }}>
-              <label style={{ fontFamily: F.ui, fontSize: 12, display: 'block', marginBottom: 8 }}>
-                비밀번호
-              </label>
+              <label style={labelStyle}>Password</label>
               <input
                 type="password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '12px',
-                  fontFamily: F.ui,
-                  fontSize: 14,
-                  background: C.surface,
-                  border: `1px solid ${C.border2}`,
-                  borderRadius: 6,
-                  color: C.bone,
-                  boxSizing: 'border-box',
-                }}
+                onChange={e => setPassword(e.target.value)}
+                style={inputStyle}
                 placeholder="••••••••"
                 required
+                minLength={6}
               />
             </div>
 
@@ -209,12 +261,12 @@ export default function Auth({ onSignIn }) {
               <div
                 style={{
                   padding: 12,
-                  background: C.ember + '20',
-                  border: `1px solid ${C.ember}`,
+                  background: C.ember + '18',
+                  border: `1px solid ${C.ember}40`,
                   borderRadius: 6,
                   color: C.ember,
                   fontFamily: F.ui,
-                  fontSize: 12,
+                  fontSize: 13,
                   marginBottom: 16,
                 }}
               >
@@ -239,29 +291,27 @@ export default function Auth({ onSignIn }) {
                 opacity: loading ? 0.6 : 1,
               }}
             >
-              {loading ? 'Processing...' : mode === 'signin' ? '로그인' : '가입'}
+              {loading ? 'Please wait...' : mode === 'signin' ? 'Sign in' : 'Create account'}
             </button>
           </form>
 
           <div style={{ marginTop: 24, textAlign: 'center' }}>
-            <span style={{ fontFamily: F.ui, fontSize: 12, color: C.bone40 }}>
-              {mode === 'signin' ? '계정이 없으신가요?' : '이미 계정이 있으신가요?'}{' '}
+            <span style={{ fontFamily: F.ui, fontSize: 13, color: C.bone40 }}>
+              {mode === 'signin' ? "Don't have an account? " : 'Already have an account? '}
               <button
-                onClick={() => {
-                  setMode(mode === 'signin' ? 'signup' : 'signin');
-                  setError('');
-                }}
+                onClick={() => { setMode(mode === 'signin' ? 'signup' : 'signin'); setError(''); }}
                 style={{
                   background: 'none',
                   border: 'none',
                   color: C.ember,
                   fontFamily: F.ui,
-                  fontSize: 12,
+                  fontSize: 13,
                   cursor: 'pointer',
                   textDecoration: 'underline',
+                  padding: 0,
                 }}
               >
-                {mode === 'signin' ? '가입하기' : '로그인'}
+                {mode === 'signin' ? 'Sign up' : 'Sign in'}
               </button>
             </span>
           </div>

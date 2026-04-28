@@ -342,27 +342,20 @@ async function getComplaints() {
 // Authentication Helpers
 // ============================================================================
 
-async function signUpUser(email, password, displayName) {
-  const userRecord = await auth.createUser({
-    email,
-    password,
-    displayName,
-  });
-
-  // Create user document
-  await createUser(userRecord.uid, {
-    email,
-    displayName,
-  });
-
-  return userRecord;
+// Called after client-side Firebase Auth creates the user
+async function signUpUser(uid, email, displayName) {
+  await createUser(uid, { email, displayName });
+  return { uid, email, displayName };
 }
 
-async function signInUser(email, password) {
-  // Note: This is for backend validation only
-  // Client should use Firebase SDK for sign-in
-  // This is a helper for admin operations
-  return { email };
+// Upsert user doc — called after Google sign-in or any auth
+async function ensureUser(uid, email, displayName) {
+  const userRef = db.collection(USERS_COLLECTION).doc(uid);
+  const userDoc = await userRef.get();
+  if (!userDoc.exists) {
+    await createUser(uid, { email, displayName });
+  }
+  return { uid, email, displayName };
 }
 
 async function getUserByEmail(email) {
@@ -417,7 +410,7 @@ module.exports = {
 
   // Auth operations
   signUpUser,
-  signInUser,
+  ensureUser,
   getUserByEmail,
 
   // Initialization
