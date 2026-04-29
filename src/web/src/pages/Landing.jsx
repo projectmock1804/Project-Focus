@@ -503,9 +503,19 @@ export default function Landing({ onEnterApp }) {
             '/videos/Winking_and_shrugging_202604281556 (1).mp4',
           ].map((videoPath, idx) => {
             const videoRef = React.useRef(null);
+            const iconRef = React.useRef(null);
+
             const handleVideoClick = () => {
               if (videoRef.current) {
                 videoRef.current.muted = !videoRef.current.muted;
+                // Update icon
+                if (iconRef.current) {
+                  if (videoRef.current.muted) {
+                    iconRef.current.textContent = '🔇';
+                  } else {
+                    iconRef.current.textContent = '🔊';
+                  }
+                }
               }
             };
 
@@ -538,19 +548,21 @@ export default function Landing({ onEnterApp }) {
                   <source src={videoPath} type="video/mp4" />
                 </video>
                 {/* Sound icon indicator */}
-                <div style={{
-                  position: 'absolute',
-                  bottom: 8,
-                  right: 8,
-                  background: 'rgba(0,0,0,0.6)',
-                  padding: '4px 8px',
-                  borderRadius: 4,
-                  fontSize: 12,
-                  color: C.bone,
-                  fontFamily: F.ui,
-                  fontWeight: 600,
-                }}>
-                  🔇 Click
+                <div
+                  ref={iconRef}
+                  style={{
+                    position: 'absolute',
+                    bottom: 8,
+                    right: 8,
+                    background: 'rgba(0,0,0,0.6)',
+                    padding: '6px 10px',
+                    borderRadius: 6,
+                    fontSize: 16,
+                    fontFamily: F.ui,
+                    fontWeight: 600,
+                    transition: 'all 0.2s',
+                  }}>
+                  🔇
                 </div>
               </div>
             );
