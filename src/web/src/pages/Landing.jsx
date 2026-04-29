@@ -483,46 +483,18 @@ export default function Landing({ onEnterApp }) {
         </div>
       </section>
 
-      {/* Video Demo Grid */}
+      {/* Video Demo Horizontal */}
       <section style={{
-        padding: '60px 40px',
-        maxWidth: 1400,
-        margin: '0 auto',
+        padding: '40px',
         background: C.graphite,
+        borderBottom: `1px solid ${C.border}`,
       }}>
-        <div style={{
-          textAlign: 'center',
-          marginBottom: 60,
-        }}>
-          <h2 style={{
-            fontSize: 42,
-            fontFamily: F.title,
-            fontWeight: 600,
-            margin: '0 0 16px',
-            color: C.bone,
-          }}>
-            See It in Action
-          </h2>
-          <p style={{
-            fontSize: 16,
-            color: C.bone40,
-            margin: 0,
-            maxWidth: 500,
-            marginLeft: 'auto',
-            marginRight: 'auto',
-          }}>
-            Real moments of distraction being caught and interrupted.
-          </p>
-        </div>
-
-        {/* 5-Video Grid */}
+        {/* 5-Video Horizontal Row */}
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-          gap: 16,
-          maxWidth: 1200,
-          marginLeft: 'auto',
-          marginRight: 'auto',
+          gridTemplateColumns: 'repeat(5, 1fr)',
+          gap: 8,
+          maxWidth: '100%',
         }}>
           {[
             '/videos/20260427 Youtube Korea.mp4',
@@ -533,10 +505,8 @@ export default function Landing({ onEnterApp }) {
           ].map((videoPath, idx) => (
             <div key={idx} style={{
               background: C.ink,
-              borderRadius: 12,
               overflow: 'hidden',
-              border: `1px solid ${C.border}`,
-              aspectRatio: '9/16',
+              height: '200px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
