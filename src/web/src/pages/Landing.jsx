@@ -501,7 +501,7 @@ export default function Landing({ onEnterApp }) {
             { path: '/videos/Woman_looking_at_202604281549.mp4', lang: 'KOR' },
             { path: '/videos/Woman_looking_at_202604281602.mp4', lang: 'KOR' },
             { path: '/videos/Winking_and_shrugging_202604281556 (1).mp4', lang: 'KOR' },
-            { path: '/videos/Disappointed_voice_tells_202604281559asdf.mp4', lang: 'ENG' },
+            { path: '/videos/Focus_on_your_202604281551.mp4', lang: 'ENG' },
             { path: '/videos/Winking_and_shrugging_202604281557.mp4', lang: 'ENG' },
             { path: '/videos/Focus_on_your_202604281551 (1).mp4', lang: 'ENG' },
             { path: '/videos/Woman_looking_at_202604281549.mp4', lang: 'ENG' },
