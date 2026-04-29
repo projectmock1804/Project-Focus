@@ -629,37 +629,6 @@ export default function Landing({ onEnterApp }) {
         </div>
       </section>
 
-      {/* The Solution - Interactive Demo */}
-      <section style={{
-        padding: '60px 40px',
-        maxWidth: 1400,
-        margin: '0 auto',
-      }}>
-        <div style={{
-          textAlign: 'center',
-          marginBottom: 60,
-        }}>
-          <h2 style={{
-            fontSize: 48,
-            fontFamily: F.title,
-            fontWeight: 600,
-            margin: 0,
-            marginBottom: 16,
-          }}>
-            Real-Time Distraction Detection
-          </h2>
-          <p style={{
-            fontSize: 16,
-            color: C.bone40,
-            margin: 0,
-          }}>
-            Project Focus watches what you're doing. When it detects you're off-task, it interrupts with a focus moment.
-          </p>
-        </div>
-
-        <PopupDemo />
-      </section>
-
       {/* How It Works */}
       <section style={{
         padding: '60px 40px',
@@ -959,211 +928,40 @@ export default function Landing({ onEnterApp }) {
         </div>
       </section>
 
-      {/* Download Desktop App Section */}
+      {/* Pricing */}
       <section style={{
         padding: '60px 40px',
         maxWidth: 1400,
-        margin: '0 auto 40px',
+        margin: '0 auto 60px',
       }}>
-        {/* Main Card */}
         <div style={{
-          background: `linear-gradient(135deg, ${C.surface}80, ${C.graphite}80)`,
-          border: `1px solid ${C.ember20}`,
-          borderRadius: 20,
-          padding: '80px 60px',
+          background: `linear-gradient(135deg, ${C.moss20}, ${C.ember10})`,
+          border: `1px solid ${C.moss10}`,
+          borderRadius: 16,
+          padding: '40px',
+          maxWidth: 600,
+          marginLeft: 'auto',
+          marginRight: 'auto',
           textAlign: 'center',
-          backdropFilter: 'blur(10px)',
-          position: 'relative',
-          overflow: 'hidden',
         }}>
-          {/* Gradient Background Elements */}
-          <div style={{
-            position: 'absolute',
-            width: 300,
-            height: 300,
-            background: `radial-gradient(circle, ${C.ember10}, transparent 70%)`,
-            right: '-100px',
-            top: '-100px',
-            borderRadius: '50%',
-            pointerEvents: 'none',
-          }} />
-          <div style={{
-            position: 'absolute',
-            width: 200,
-            height: 200,
-            background: `radial-gradient(circle, ${C.moss10}, transparent 70%)`,
-            left: '-50px',
-            bottom: '50px',
-            borderRadius: '50%',
-            pointerEvents: 'none',
-          }} />
-
-          <div style={{ position: 'relative', zIndex: 10 }}>
-            {/* Icon */}
-            <div style={{
-              fontSize: 60,
-              marginBottom: 24,
-              display: 'inline-block',
-              background: `linear-gradient(135deg, ${C.ember20}, ${C.moss10})`,
-              padding: '20px',
-              borderRadius: 12,
-              border: `1px solid ${C.ember10}`,
-            }}>
-              🖥️
-            </div>
-
-            {/* Headline */}
-            <h2 style={{
-              fontSize: 44,
-              fontFamily: F.title,
-              fontWeight: 600,
-              margin: '0 0 12px',
-              background: `linear-gradient(135deg, ${C.bone}, ${C.bone40})`,
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text',
-            }}>
-              Get the Power of Focus
-            </h2>
-
-            {/* Subheading */}
-            <p style={{
-              fontSize: 18,
-              color: C.bone40,
-              margin: '0 0 12px',
-              maxWidth: 600,
-              marginLeft: 'auto',
-              marginRight: 'auto',
-              lineHeight: 1.6,
-            }}>
-              Download the desktop app. Watch your back while you work.
-            </p>
-            <p style={{
-              fontSize: 14,
-              color: C.bone20,
-              margin: '0 0 48px',
-              maxWidth: 600,
-              marginLeft: 'auto',
-              marginRight: 'auto',
-            }}>
-              Runs silently in the background. Detects distractions in real-time. Interrupts before you lose focus.
-            </p>
-
-            {/* Download Button */}
-            <div style={{ display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 48 }}>
-              <a
-                href="https://github.com/projectmock1804/Project-Focus/releases/latest/download/Project-Focus-Setup.exe"
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 10,
-                  fontFamily: F.ui,
-                  fontSize: 16,
-                  padding: '18px 44px',
-                  background: `linear-gradient(135deg, ${C.ember}, ${C.ember}dd)`,
-                  border: 'none',
-                  borderRadius: 10,
-                  color: C.bone,
-                  cursor: 'pointer',
-                  fontWeight: 700,
-                  textDecoration: 'none',
-                  boxShadow: `0 12px 40px rgba(232, 107, 58, 0.35)`,
-                  transition: 'all 0.3s ease',
-                }}
-                onMouseEnter={(e) => {
-                  e.style.transform = 'translateY(-4px)';
-                  e.style.boxShadow = `0 16px 48px rgba(232, 107, 58, 0.45)`;
-                }}
-                onMouseLeave={(e) => {
-                  e.style.transform = 'translateY(0)';
-                  e.style.boxShadow = `0 12px 40px rgba(232, 107, 58, 0.35)`;
-                }}
-              >
-                <span>⬇</span> Download for Windows
-              </a>
-            </div>
-
-            {/* Features Grid */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(2, 1fr)',
-              gap: 24,
-              marginBottom: 48,
-              maxWidth: 600,
-              marginLeft: 'auto',
-              marginRight: 'auto',
-            }}>
-              {[
-                { icon: '🔕', title: 'No Terminal', desc: 'Clean installer, no command line' },
-                { icon: '🤫', title: 'Silent', desc: 'Runs in background, no distractions' },
-                { icon: '⚡', title: 'Instant Alerts', desc: 'Popup blocks distractions instantly' },
-                { icon: '🪟', title: 'Windows Ready', desc: 'Works perfectly on Windows 10/11' },
-              ].map(item => (
-                <div key={item.title} style={{
-                  padding: '20px',
-                  background: `rgba(242, 240, 235, 0.03)`,
-                  border: `1px solid ${C.border}`,
-                  borderRadius: 12,
-                  textAlign: 'center',
-                  transition: 'all 0.3s ease',
-                  cursor: 'default',
-                }}>
-                  <div style={{ fontSize: 32, marginBottom: 12 }}>{item.icon}</div>
-                  <div style={{
-                    fontSize: 14,
-                    fontWeight: 600,
-                    color: C.bone,
-                    marginBottom: 4,
-                    fontFamily: F.ui,
-                  }}>
-                    {item.title}
-                  </div>
-                  <div style={{
-                    fontSize: 12,
-                    color: C.bone40,
-                    fontFamily: F.ui,
-                    lineHeight: 1.5,
-                  }}>
-                    {item.desc}
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* SmartScreen Notice */}
-            <div style={{
-              background: `linear-gradient(135deg, rgba(232,107,58,0.08), rgba(107,142,90,0.08))`,
-              border: `1px solid ${C.border2}`,
-              borderRadius: 14,
-              padding: '20px 28px',
-              textAlign: 'left',
-              maxWidth: 520,
-              margin: '0 auto',
-              fontFamily: F.ui,
-            }}>
-              <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-                <span style={{ fontSize: 18, flexShrink: 0 }}>🔒</span>
-                <div>
-                  <div style={{
-                    fontSize: 13,
-                    fontWeight: 600,
-                    color: C.bone,
-                    marginBottom: 6,
-                  }}>
-                    Windows SmartScreen Notice
-                  </div>
-                  <p style={{
-                    fontSize: 12,
-                    color: C.bone40,
-                    margin: 0,
-                    lineHeight: 1.6,
-                  }}>
-                    New apps may trigger Windows protection. Click <strong style={{ color: C.bone }}>More info</strong> → <strong style={{ color: C.bone }}>Run anyway</strong>. This is normal and your app is safe.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
+          <div style={{ fontSize: 32, marginBottom: 16 }}>💚</div>
+          <h3 style={{
+            fontSize: 24,
+            fontFamily: F.title,
+            fontWeight: 600,
+            color: C.bone,
+            margin: '0 0 12px',
+          }}>
+            Try Free for 2 Weeks
+          </h3>
+          <p style={{
+            fontSize: 14,
+            color: C.bone40,
+            margin: 0,
+            lineHeight: 1.6,
+          }}>
+            Download and use Project Focus completely free for 2 weeks. Full access to all features — no credit card required. After that, upgrade to continue using it.
+          </p>
         </div>
       </section>
 
