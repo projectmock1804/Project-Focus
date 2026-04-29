@@ -317,6 +317,32 @@ export default function Landing({ onEnterApp }) {
             </svg>
             <span style={{ fontSize: 16, fontWeight: 600, fontFamily: F.title, fontStyle: 'italic' }}>focus.</span>
           </div>
+          <a href="https://github.com/projectmock1804/Project-Focus/releases/latest/download/Project-Focus-Setup.exe" style={{
+            fontFamily: F.ui,
+            fontSize: 13,
+            padding: '10px 20px',
+            background: C.ember,
+            border: 'none',
+            borderRadius: 4,
+            color: C.bone,
+            cursor: 'pointer',
+            fontWeight: 600,
+            textDecoration: 'none',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 6,
+            transition: 'all 0.2s',
+          }}
+          onMouseEnter={(e) => {
+            e.style.transform = 'translateY(-1px)';
+            e.style.boxShadow = `0 6px 16px rgba(232, 107, 58, 0.3)`;
+          }}
+          onMouseLeave={(e) => {
+            e.style.transform = 'translateY(0)';
+            e.style.boxShadow = 'none';
+          }}>
+            <span>⬇</span> Download
+          </a>
         </div>
       </nav>
 
@@ -459,7 +485,7 @@ export default function Landing({ onEnterApp }) {
 
       {/* The Core Problem */}
       <section style={{
-        padding: '120px 40px',
+        padding: '60px 40px',
         maxWidth: 1400,
         margin: '0 auto',
       }}>
@@ -530,7 +556,7 @@ export default function Landing({ onEnterApp }) {
 
       {/* The Solution - Interactive Demo */}
       <section style={{
-        padding: '120px 40px',
+        padding: '60px 40px',
         maxWidth: 1400,
         margin: '0 auto',
       }}>
@@ -561,7 +587,7 @@ export default function Landing({ onEnterApp }) {
 
       {/* How It Works */}
       <section style={{
-        padding: '120px 40px',
+        padding: '60px 40px',
         maxWidth: 1400,
         margin: '0 auto',
       }}>
@@ -651,7 +677,7 @@ export default function Landing({ onEnterApp }) {
 
       {/* Features */}
       <section style={{
-        padding: '120px 40px',
+        padding: '60px 40px',
         maxWidth: 1400,
         margin: '0 auto',
       }}>
@@ -751,7 +777,7 @@ export default function Landing({ onEnterApp }) {
 
       {/* Pricing */}
       <section style={{
-        padding: '120px 40px',
+        padding: '60px 40px',
         maxWidth: 1400,
         margin: '0 auto',
       }}>
@@ -860,7 +886,7 @@ export default function Landing({ onEnterApp }) {
 
       {/* Download Desktop App Section */}
       <section style={{
-        padding: '120px 40px',
+        padding: '60px 40px',
         maxWidth: 1400,
         margin: '0 auto 40px',
       }}>
