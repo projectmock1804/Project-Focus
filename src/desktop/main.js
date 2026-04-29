@@ -211,6 +211,33 @@ function detectSiteName(windowTitle, displayMode = false) {
 }
 
 // ---------------------------------------------------------------------------
+// Get random video from KOR Video/vertical folder
+// ---------------------------------------------------------------------------
+function getRandomVideo() {
+  try {
+    const videoDir = path.join(app.getPath('userData'), '..', '..', 'Project Focus', 'KOR Video', 'vertical');
+    const fs = require('fs');
+
+    if (!fs.existsSync(videoDir)) {
+      console.log('[Desktop] Video directory not found:', videoDir);
+      return null;
+    }
+
+    const files = fs.readdirSync(videoDir).filter(f => /\.(mp4|webm|mov|mkv)$/i.test(f));
+
+    if (files.length === 0) {
+      console.log('[Desktop] No video files found in:', videoDir);
+      return null;
+    }
+
+    const randomFile = files[Math.floor(Math.random() * files.length)];
+    return path.join(videoDir, randomFile);
+  } catch (err) {
+    console.error('[Desktop] Error selecting random video:', err.message);
+    return null;
+  }
+}
+
 // Distraction popup window
 // ---------------------------------------------------------------------------
 function showDistractionPopup({ distractedMinutes, windowTitle }) {
@@ -224,8 +251,11 @@ function showDistractionPopup({ distractedMinutes, windowTitle }) {
     return;
   }
 
+  // Select random video
+  const videoPath = getRandomVideo();
+
   // Check if it's YouTube - if so, make popup larger for video
-  const isYouTube = (windowTitle || '').toLowerCase().includes('youtube');
+  const isYouTube = (windowTitle || '').toLowerCase().includes('youtube') || videoPath;
   const popupWidth = isYouTube ? 700 : 550;
   const popupHeight = isYouTube ? 600 : 220;
 
@@ -270,7 +300,10 @@ function showDistractionPopup({ distractedMinutes, windowTitle }) {
   // Load popup from file
   const displaySite = detectSiteName(windowTitle, true);
 
-  const popupUrl = `file://${path.join(__dirname, 'popup.html')}?site=${encodeURIComponent(displaySite)}&mins=${mins}&isYouTube=${isYouTube}`;
+  let popupUrl = `file://${path.join(__dirname, 'popup.html')}?site=${encodeURIComponent(displaySite)}&mins=${mins}&isYouTube=${isYouTube}`;
+  if (videoPath) {
+    popupUrl += `&video=${encodeURIComponent(videoPath)}`;
+  }
   popupWindow.loadURL(popupUrl);
   popupWindow.setAlwaysOnTop(true, 'screen-saver');
 

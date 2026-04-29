@@ -140,15 +140,28 @@
 const params = new URLSearchParams(window.location.search);
 const site = params.get('site') || 'This site';
 const mins = params.get('mins') || 0;
+const videoPath = params.get('video');
 const isYouTube = params.get('isYouTube') === 'true';
 
-// Show video if YouTube
-if (isYouTube) {
+// Show video if available or YouTube
+if (videoPath || isYouTube) {
   document.getElementById('videoContainer').classList.add('show');
   document.getElementById('message').innerHTML = `Focus Moment: Watch this before continuing.<br><br><strong>${site}</strong> — ${mins} min spent here.`;
 
-  // Force video to play
+  // Set video source
   const video = document.getElementById('focusVideo');
+  const source = video.querySelector('source');
+
+  if (videoPath) {
+    // Convert file path to file:// URL
+    const fileUrl = 'file:///' + videoPath.replace(/\\/g, '/');
+    source.src = fileUrl;
+    source.type = 'video/mp4';
+    console.log('[POPUP] Video source set to:', fileUrl);
+  }
+
+  // Reload video element to apply source change
+  video.load();
 
   // When video is loaded, try to play
   video.addEventListener('canplay', () => {
