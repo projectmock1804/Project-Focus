@@ -489,43 +489,72 @@ export default function Landing({ onEnterApp }) {
         background: C.graphite,
         borderBottom: `1px solid ${C.border}`,
       }}>
-        {/* 5-Video Horizontal Row */}
+        {/* 4-Video Horizontal Row */}
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(5, 1fr)',
+          gridTemplateColumns: 'repeat(4, 1fr)',
           gap: 8,
           maxWidth: '100%',
         }}>
           {[
-            '/videos/20260427 Youtube Korea.mp4',
             '/videos/Woman_looking_at_202604281549 (1).mp4',
             '/videos/Woman_looking_at_202604281549.mp4',
             '/videos/Woman_looking_at_202604281602.mp4',
-            '/videos/Woman_looking_at_202604281603.mp4',
-          ].map((videoPath, idx) => (
-            <div key={idx} style={{
-              background: C.ink,
-              overflow: 'hidden',
-              height: '200px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}>
-              <video
-                style={{
-                  width: '100%',
-                  height: '100%',
-                  objectFit: 'cover',
-                }}
-                autoPlay
-                muted
-                loop
-                playsInline
+            '/videos/Winking_and_shrugging_202604281556 (1).mp4',
+          ].map((videoPath, idx) => {
+            const videoRef = React.useRef(null);
+            const handleVideoClick = () => {
+              if (videoRef.current) {
+                videoRef.current.muted = !videoRef.current.muted;
+              }
+            };
+
+            return (
+              <div key={idx} style={{
+                background: C.ink,
+                overflow: 'hidden',
+                height: '250px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                position: 'relative',
+              }}
+              onClick={handleVideoClick}
+              title="Click to toggle sound"
               >
-                <source src={videoPath} type="video/mp4" />
-              </video>
-            </div>
-          ))}
+                <video
+                  ref={videoRef}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                  }}
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                >
+                  <source src={videoPath} type="video/mp4" />
+                </video>
+                {/* Sound icon indicator */}
+                <div style={{
+                  position: 'absolute',
+                  bottom: 8,
+                  right: 8,
+                  background: 'rgba(0,0,0,0.6)',
+                  padding: '4px 8px',
+                  borderRadius: 4,
+                  fontSize: 12,
+                  color: C.bone,
+                  fontFamily: F.ui,
+                  fontWeight: 600,
+                }}>
+                  🔇 Click
+                </div>
+              </div>
+            );
+          })}
         </div>
       </section>
 
