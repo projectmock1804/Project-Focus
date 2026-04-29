@@ -1,6 +1,6 @@
 {
   "name": "project-focus",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Project Focus MVP - AI-powered focus tracker with Telegram, Gemini, and local JSON DB",
   "main": "index.js",
   "scripts": {
@@ -77,6 +77,7 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.36.3",
     "axios": "^1.15.2",
+    "call-bind-apply-helpers": "^1.0.2",
     "cors": "^2.8.5",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
