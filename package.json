@@ -33,9 +33,9 @@
       "!src/web/public/**",
       "!src/web/vite.config.js",
       "!src/web/index.html",
-      "!src/web/node_modules/**",
-      "node_modules/**/*",
-      "package.json"
+      "node_modules/**",
+      "package.json",
+      ".env"
     ],
     "extraResources": [
       {
@@ -62,7 +62,8 @@
       "shortcutName": "Project Focus",
       "artifactName": "Project-Focus-Setup.exe"
     },
-    "asar": true
+    "asar": true,
+    "asarUnpack": ["node_modules/**"]
   },
   "keywords": [
     "productivity",
