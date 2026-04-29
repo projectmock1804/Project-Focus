@@ -211,9 +211,9 @@ function detectSiteName(windowTitle, displayMode = false) {
 }
 
 // ---------------------------------------------------------------------------
-// Get random video from KOR Video/vertical folder
+// Get random video from KOR Video/vertical folder (max 4 videos for non-YouTube)
 // ---------------------------------------------------------------------------
-function getRandomVideo() {
+function getRandomVideo(maxVideos = null) {
   try {
     const videoDir = path.join(app.getPath('userData'), '..', '..', 'Project Focus', 'KOR Video', 'vertical');
     const fs = require('fs');
@@ -230,7 +230,9 @@ function getRandomVideo() {
       return null;
     }
 
-    const randomFile = files[Math.floor(Math.random() * files.length)];
+    // Limit to maxVideos if specified
+    const availableFiles = maxVideos && files.length > maxVideos ? files.slice(0, maxVideos) : files;
+    const randomFile = availableFiles[Math.floor(Math.random() * availableFiles.length)];
     return path.join(videoDir, randomFile);
   } catch (err) {
     console.error('[Desktop] Error selecting random video:', err.message);
@@ -251,13 +253,20 @@ function showDistractionPopup({ distractedMinutes, windowTitle }) {
     return;
   }
 
-  // Select random video
-  const videoPath = getRandomVideo();
+  // Detect site and select appropriate video
+  const isYouTube = (windowTitle || '').toLowerCase().includes('youtube');
+  let videoPath = null;
 
-  // Check if it's YouTube - if so, make popup larger for video
-  const isYouTube = (windowTitle || '').toLowerCase().includes('youtube') || videoPath;
-  const popupWidth = isYouTube ? 700 : 550;
-  const popupHeight = isYouTube ? 600 : 220;
+  if (!isYouTube) {
+    // For non-YouTube distractions: random from 4 videos
+    videoPath = getRandomVideo(4);
+  }
+  // For YouTube: no video path (use the default YouTube Korea video from static server)
+
+  // Popup size based on whether showing video
+  const hasVideo = isYouTube || videoPath;
+  const popupWidth = hasVideo ? 700 : 550;
+  const popupHeight = hasVideo ? 600 : 220;
 
   // Get the display where the mouse cursor is located
   const cursorPoint = screen.getCursorScreenPoint();
@@ -300,11 +309,14 @@ function showDistractionPopup({ distractedMinutes, windowTitle }) {
   // Load popup from file
   const displaySite = detectSiteName(windowTitle, true);
 
+  // Note: isYouTube flag tells popup.html whether to use the YouTube video endpoint
+  // If videoPath exists, it's a local file URL; otherwise for YouTube, use the HTTP endpoint
   let popupUrl = `file://${path.join(__dirname, 'popup.html')}?site=${encodeURIComponent(displaySite)}&mins=${mins}&isYouTube=${isYouTube}`;
   if (videoPath) {
     popupUrl += `&video=${encodeURIComponent(videoPath)}`;
   }
   popupWindow.loadURL(popupUrl);
+  console.log(`[Desktop] Showing popup: isYouTube=${isYouTube}, videoPath=${videoPath ? 'yes' : 'no'}, site=${displaySite}`);
   popupWindow.setAlwaysOnTop(true, 'screen-saver');
 
   popupWindow.on('closed', () => {
