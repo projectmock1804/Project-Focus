@@ -483,6 +483,82 @@ export default function Landing({ onEnterApp }) {
         </div>
       </section>
 
+      {/* Video Demo Grid */}
+      <section style={{
+        padding: '60px 40px',
+        maxWidth: 1400,
+        margin: '0 auto',
+        background: C.graphite,
+      }}>
+        <div style={{
+          textAlign: 'center',
+          marginBottom: 60,
+        }}>
+          <h2 style={{
+            fontSize: 42,
+            fontFamily: F.title,
+            fontWeight: 600,
+            margin: '0 0 16px',
+            color: C.bone,
+          }}>
+            See It in Action
+          </h2>
+          <p style={{
+            fontSize: 16,
+            color: C.bone40,
+            margin: 0,
+            maxWidth: 500,
+            marginLeft: 'auto',
+            marginRight: 'auto',
+          }}>
+            Real moments of distraction being caught and interrupted.
+          </p>
+        </div>
+
+        {/* 5-Video Grid */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+          gap: 16,
+          maxWidth: 1200,
+          marginLeft: 'auto',
+          marginRight: 'auto',
+        }}>
+          {[
+            '/videos/20260427 Youtube Korea.mp4',
+            '/videos/Woman_looking_at_202604281549 (1).mp4',
+            '/videos/Woman_looking_at_202604281549.mp4',
+            '/videos/Woman_looking_at_202604281602.mp4',
+            '/videos/Woman_looking_at_202604281603.mp4',
+          ].map((videoPath, idx) => (
+            <div key={idx} style={{
+              background: C.ink,
+              borderRadius: 12,
+              overflow: 'hidden',
+              border: `1px solid ${C.border}`,
+              aspectRatio: '9/16',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}>
+              <video
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                }}
+                autoPlay
+                muted
+                loop
+                playsInline
+              >
+                <source src={videoPath} type="video/mp4" />
+              </video>
+            </div>
+          ))}
+        </div>
+      </section>
+
       {/* The Core Problem */}
       <section style={{
         padding: '60px 40px',
