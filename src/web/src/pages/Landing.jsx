@@ -1042,10 +1042,10 @@ export default function Landing({ onEnterApp }) {
             {/* Features Grid */}
             <div style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+              gridTemplateColumns: 'repeat(2, 1fr)',
               gap: 24,
               marginBottom: 48,
-              maxWidth: 800,
+              maxWidth: 600,
               marginLeft: 'auto',
               marginRight: 'auto',
             }}>
