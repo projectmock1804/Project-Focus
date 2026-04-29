@@ -489,7 +489,7 @@ export default function Landing({ onEnterApp }) {
         background: C.graphite,
         borderBottom: `1px solid ${C.border}`,
       }}>
-        {/* 4-Video Horizontal Row */}
+        {/* 8-Video Grid with Language Labels */}
         <div style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(4, 1fr)',
@@ -497,11 +497,15 @@ export default function Landing({ onEnterApp }) {
           maxWidth: '100%',
         }}>
           {[
-            '/videos/20260427 Youtube Korea.mp4',
-            '/videos/Woman_looking_at_202604281549.mp4',
-            '/videos/Woman_looking_at_202604281602.mp4',
-            '/videos/Winking_and_shrugging_202604281556 (1).mp4',
-          ].map((videoPath, idx) => {
+            { path: '/videos/20260427 Youtube Korea.mp4', lang: 'KOR' },
+            { path: '/videos/Woman_looking_at_202604281549.mp4', lang: 'KOR' },
+            { path: '/videos/Woman_looking_at_202604281602.mp4', lang: 'KOR' },
+            { path: '/videos/Winking_and_shrugging_202604281556 (1).mp4', lang: 'KOR' },
+            { path: '/videos/Disappointed_voice_tells_202604281559asdf.mp4', lang: 'ENG' },
+            { path: '/videos/Winking_and_shrugging_202604281557.mp4', lang: 'ENG' },
+            { path: '/videos/Focus_on_your_202604281551 (1).mp4', lang: 'ENG' },
+            { path: '/videos/Woman_looking_at_202604281549.mp4', lang: 'ENG' },
+          ].map((video, idx) => {
             const videoRef = React.useRef(null);
             const iconRef = React.useRef(null);
 
@@ -545,8 +549,26 @@ export default function Landing({ onEnterApp }) {
                   loop
                   playsInline
                 >
-                  <source src={videoPath} type="video/mp4" />
+                  <source src={video.path} type="video/mp4" />
                 </video>
+                {/* Language Badge */}
+                <div style={{
+                  position: 'absolute',
+                  top: 8,
+                  left: 8,
+                  background: C.ember,
+                  color: C.bone,
+                  padding: '4px 10px',
+                  borderRadius: 4,
+                  fontSize: 11,
+                  fontFamily: F.ui,
+                  fontWeight: 700,
+                  letterSpacing: '0.08em',
+                  textTransform: 'uppercase',
+                  zIndex: 10,
+                }}>
+                  {video.lang}
+                </div>
                 {/* Sound icon indicator */}
                 <div
                   ref={iconRef}
