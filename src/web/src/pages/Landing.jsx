@@ -411,8 +411,9 @@ export default function Landing({ onEnterApp }) {
             gap: 12,
             justifyContent: 'center',
             marginBottom: 60,
+            flexWrap: 'wrap',
           }}>
-            <button onClick={onEnterApp} style={{
+            <a href="https://github.com/projectmock1804/Project-Focus/releases/latest/download/Project-Focus-Setup.exe" style={{
               fontFamily: F.ui,
               fontSize: 15,
               padding: '16px 36px',
@@ -424,16 +425,42 @@ export default function Landing({ onEnterApp }) {
               fontWeight: 600,
               transition: 'all 0.2s',
               boxShadow: `0 8px 24px rgba(232, 107, 58, 0.3)`,
+              textDecoration: 'none',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 8,
             }}
             onMouseEnter={(e) => {
-              e.target.style.transform = 'translateY(-2px)';
-              e.target.style.boxShadow = `0 12px 32px rgba(232, 107, 58, 0.4)`;
+              e.style.transform = 'translateY(-2px)';
+              e.style.boxShadow = `0 12px 32px rgba(232, 107, 58, 0.4)`;
             }}
             onMouseLeave={(e) => {
-              e.target.style.transform = 'translateY(0)';
-              e.target.style.boxShadow = `0 8px 24px rgba(232, 107, 58, 0.3)`;
+              e.style.transform = 'translateY(0)';
+              e.style.boxShadow = `0 8px 24px rgba(232, 107, 58, 0.3)`;
             }}>
-              Start Free Trial →
+              <span>⬇</span> Download for Windows
+            </a>
+            <button onClick={onEnterApp} style={{
+              fontFamily: F.ui,
+              fontSize: 14,
+              padding: '14px 28px',
+              background: 'transparent',
+              border: `1px solid ${C.border2}`,
+              borderRadius: 6,
+              color: C.bone40,
+              cursor: 'pointer',
+              fontWeight: 500,
+              transition: 'all 0.2s',
+            }}
+            onMouseEnter={(e) => {
+              e.style.borderColor = C.bone;
+              e.style.color = C.bone;
+            }}
+            onMouseLeave={(e) => {
+              e.style.borderColor = C.border2;
+              e.style.color = C.bone40;
+            }}>
+              Use Web Only
             </button>
           </div>
 
@@ -868,130 +895,230 @@ export default function Landing({ onEnterApp }) {
 
       {/* Download Desktop App Section */}
       <section style={{
-        padding: '80px 40px',
+        padding: '120px 40px',
         maxWidth: 1400,
         margin: '0 auto 40px',
       }}>
+        {/* Main Card */}
         <div style={{
-          background: `linear-gradient(135deg, ${C.graphite}, ${C.surface})`,
-          border: `1px solid ${C.border2}`,
-          borderRadius: 16,
-          padding: '60px 40px',
+          background: `linear-gradient(135deg, ${C.surface}80, ${C.graphite}80)`,
+          border: `1px solid ${C.ember20}`,
+          borderRadius: 20,
+          padding: '80px 60px',
           textAlign: 'center',
+          backdropFilter: 'blur(10px)',
+          position: 'relative',
+          overflow: 'hidden',
         }}>
-          <div style={{ fontSize: 48, marginBottom: 16 }}>💻</div>
-          <h2 style={{
-            fontSize: 36,
-            fontFamily: F.title,
-            fontWeight: 600,
-            margin: '0 0 16px 0',
-          }}>
-            Download Desktop App
-          </h2>
-          <p style={{
-            fontSize: 16,
-            color: C.bone40,
-            margin: '0 0 8px',
-            lineHeight: 1.6,
-          }}>
-            The web app manages your tasks. The desktop app watches your back.
-          </p>
-          <p style={{
-            fontSize: 14,
-            color: C.bone20,
-            margin: '0 0 40px',
-          }}>
-            Runs silently in the background. Catches distractions. Shows a popup.
-          </p>
-
-          <div style={{ display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 32 }}>
-            <a
-              href="https://github.com/projectmock1804/Project-Focus/releases/latest/download/Project-Focus-Setup.exe"
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 10,
-                fontFamily: F.ui,
-                fontSize: 15,
-                padding: '16px 36px',
-                background: C.moss,
-                border: 'none',
-                borderRadius: 8,
-                color: C.ink,
-                cursor: 'pointer',
-                fontWeight: 700,
-                textDecoration: 'none',
-                boxShadow: '0 8px 24px rgba(107,142,90,0.3)',
-              }}
-            >
-              <span>⬇</span> Download for Windows
-            </a>
-            <button onClick={onEnterApp} style={{
-              fontFamily: F.ui,
-              fontSize: 15,
-              padding: '16px 36px',
-              background: 'transparent',
-              border: `1px solid ${C.border2}`,
-              borderRadius: 8,
-              color: C.bone,
-              cursor: 'pointer',
-              fontWeight: 500,
-            }}>
-              Use Web Only →
-            </button>
-          </div>
-
-          {/* SmartScreen Security Notice */}
+          {/* Gradient Background Elements */}
           <div style={{
-            background: `linear-gradient(135deg, ${C.moss10}, ${C.ember10})`,
-            border: `1px solid rgba(107,142,90,0.3)`,
-            borderRadius: 12,
-            padding: '24px 32px',
-            textAlign: 'left',
-            maxWidth: 500,
-            margin: '0 auto',
-            fontFamily: F.ui,
-          }}>
-            <div style={{ display: 'flex', gap: 12, marginBottom: 12 }}>
-              <span style={{ fontSize: 20 }}>🔒</span>
-              <div>
-                <div style={{
-                  fontSize: 14,
-                  fontWeight: 600,
+            position: 'absolute',
+            width: 300,
+            height: 300,
+            background: `radial-gradient(circle, ${C.ember10}, transparent 70%)`,
+            right: '-100px',
+            top: '-100px',
+            borderRadius: '50%',
+            pointerEvents: 'none',
+          }} />
+          <div style={{
+            position: 'absolute',
+            width: 200,
+            height: 200,
+            background: `radial-gradient(circle, ${C.moss10}, transparent 70%)`,
+            left: '-50px',
+            bottom: '50px',
+            borderRadius: '50%',
+            pointerEvents: 'none',
+          }} />
+
+          <div style={{ position: 'relative', zIndex: 10 }}>
+            {/* Icon */}
+            <div style={{
+              fontSize: 60,
+              marginBottom: 24,
+              display: 'inline-block',
+              background: `linear-gradient(135deg, ${C.ember20}, ${C.moss10})`,
+              padding: '20px',
+              borderRadius: 12,
+              border: `1px solid ${C.ember10}`,
+            }}>
+              🖥️
+            </div>
+
+            {/* Headline */}
+            <h2 style={{
+              fontSize: 44,
+              fontFamily: F.title,
+              fontWeight: 600,
+              margin: '0 0 12px',
+              background: `linear-gradient(135deg, ${C.bone}, ${C.bone40})`,
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+            }}>
+              Get the Power of Focus
+            </h2>
+
+            {/* Subheading */}
+            <p style={{
+              fontSize: 18,
+              color: C.bone40,
+              margin: '0 0 12px',
+              maxWidth: 600,
+              marginLeft: 'auto',
+              marginRight: 'auto',
+              lineHeight: 1.6,
+            }}>
+              Download the desktop app. Watch your back while you work.
+            </p>
+            <p style={{
+              fontSize: 14,
+              color: C.bone20,
+              margin: '0 0 48px',
+              maxWidth: 600,
+              marginLeft: 'auto',
+              marginRight: 'auto',
+            }}>
+              Runs silently in the background. Detects distractions in real-time. Interrupts before you lose focus.
+            </p>
+
+            {/* Download Button */}
+            <div style={{ display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 48 }}>
+              <a
+                href="https://github.com/projectmock1804/Project-Focus/releases/latest/download/Project-Focus-Setup.exe"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 10,
+                  fontFamily: F.ui,
+                  fontSize: 16,
+                  padding: '18px 44px',
+                  background: `linear-gradient(135deg, ${C.ember}, ${C.ember}dd)`,
+                  border: 'none',
+                  borderRadius: 10,
                   color: C.bone,
-                  marginBottom: 4,
+                  cursor: 'pointer',
+                  fontWeight: 700,
+                  textDecoration: 'none',
+                  boxShadow: `0 12px 40px rgba(232, 107, 58, 0.35)`,
+                  transition: 'all 0.3s ease',
+                }}
+                onMouseEnter={(e) => {
+                  e.style.transform = 'translateY(-4px)';
+                  e.style.boxShadow = `0 16px 48px rgba(232, 107, 58, 0.45)`;
+                }}
+                onMouseLeave={(e) => {
+                  e.style.transform = 'translateY(0)';
+                  e.style.boxShadow = `0 12px 40px rgba(232, 107, 58, 0.35)`;
+                }}
+              >
+                <span>⬇</span> Download for Windows
+              </a>
+              <button onClick={onEnterApp} style={{
+                fontFamily: F.ui,
+                fontSize: 14,
+                padding: '16px 36px',
+                background: 'transparent',
+                border: `1px solid ${C.border2}`,
+                borderRadius: 10,
+                color: C.bone40,
+                cursor: 'pointer',
+                fontWeight: 500,
+                transition: 'all 0.3s ease',
+              }}
+              onMouseEnter={(e) => {
+                e.style.borderColor = C.ember;
+                e.style.color = C.ember;
+              }}
+              onMouseLeave={(e) => {
+                e.style.borderColor = C.border2;
+                e.style.color = C.bone40;
+              }}>
+                Use Web Version →
+              </button>
+            </div>
+
+            {/* Features Grid */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+              gap: 24,
+              marginBottom: 48,
+              maxWidth: 800,
+              marginLeft: 'auto',
+              marginRight: 'auto',
+            }}>
+              {[
+                { icon: '🔕', title: 'No Terminal', desc: 'Clean installer, no command line' },
+                { icon: '🤫', title: 'Silent', desc: 'Runs in background, no distractions' },
+                { icon: '⚡', title: 'Instant Alerts', desc: 'Popup blocks distractions instantly' },
+                { icon: '🪟', title: 'Windows Ready', desc: 'Works perfectly on Windows 10/11' },
+              ].map(item => (
+                <div key={item.title} style={{
+                  padding: '20px',
+                  background: `rgba(242, 240, 235, 0.03)`,
+                  border: `1px solid ${C.border}`,
+                  borderRadius: 12,
+                  textAlign: 'center',
+                  transition: 'all 0.3s ease',
+                  cursor: 'default',
                 }}>
-                  Windows Protection Notice
+                  <div style={{ fontSize: 32, marginBottom: 12 }}>{item.icon}</div>
+                  <div style={{
+                    fontSize: 14,
+                    fontWeight: 600,
+                    color: C.bone,
+                    marginBottom: 4,
+                    fontFamily: F.ui,
+                  }}>
+                    {item.title}
+                  </div>
+                  <div style={{
+                    fontSize: 12,
+                    color: C.bone40,
+                    fontFamily: F.ui,
+                    lineHeight: 1.5,
+                  }}>
+                    {item.desc}
+                  </div>
                 </div>
-                <p style={{
-                  fontSize: 13,
-                  color: C.bone40,
-                  margin: 0,
-                  lineHeight: 1.6,
-                }}>
-                  Windows may show a security message when you install. This is normal for new apps.
-                  <br />
-                  <br />
-                  Just click: <strong style={{ color: C.bone }}>More info</strong> → <strong style={{ color: C.bone }}>Run anyway</strong>
-                  <br />
-                  <br />
-                  <span style={{ fontSize: 12, color: C.bone20 }}>Your security matters — Project Focus is open-source and code-transparent.</span>
-                </p>
+              ))}
+            </div>
+
+            {/* SmartScreen Notice */}
+            <div style={{
+              background: `linear-gradient(135deg, rgba(232,107,58,0.08), rgba(107,142,90,0.08))`,
+              border: `1px solid ${C.border2}`,
+              borderRadius: 14,
+              padding: '20px 28px',
+              textAlign: 'left',
+              maxWidth: 520,
+              margin: '0 auto',
+              fontFamily: F.ui,
+            }}>
+              <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+                <span style={{ fontSize: 18, flexShrink: 0 }}>🔒</span>
+                <div>
+                  <div style={{
+                    fontSize: 13,
+                    fontWeight: 600,
+                    color: C.bone,
+                    marginBottom: 6,
+                  }}>
+                    Windows SmartScreen Notice
+                  </div>
+                  <p style={{
+                    fontSize: 12,
+                    color: C.bone40,
+                    margin: 0,
+                    lineHeight: 1.6,
+                  }}>
+                    New apps may trigger Windows protection. Click <strong style={{ color: C.bone }}>More info</strong> → <strong style={{ color: C.bone }}>Run anyway</strong>. This is normal and your app is safe.
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
-
-          <div style={{ display: 'flex', justifyContent: 'center', gap: 32, flexWrap: 'wrap' }}>
-            {[
-              { icon: '🔕', text: 'No terminal window' },
-              { icon: '🤫', text: 'Silent background process' },
-              { icon: '⚡', text: 'Instant distraction alerts' },
-              { icon: '🪟', text: 'Windows 10/11' },
-            ].map(item => (
-              <div key={item.text} style={{ display: 'flex', alignItems: 'center', gap: 8, fontFamily: F.ui, fontSize: 13, color: C.bone40 }}>
-                <span>{item.icon}</span> {item.text}
-              </div>
-            ))}
           </div>
         </div>
       </section>
