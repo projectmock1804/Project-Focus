@@ -941,6 +941,46 @@ export default function Landing({ onEnterApp }) {
             </button>
           </div>
 
+          {/* SmartScreen Security Notice */}
+          <div style={{
+            background: `linear-gradient(135deg, ${C.moss10}, ${C.ember10})`,
+            border: `1px solid rgba(107,142,90,0.3)`,
+            borderRadius: 12,
+            padding: '24px 32px',
+            textAlign: 'left',
+            maxWidth: 500,
+            margin: '0 auto',
+            fontFamily: F.ui,
+          }}>
+            <div style={{ display: 'flex', gap: 12, marginBottom: 12 }}>
+              <span style={{ fontSize: 20 }}>🔒</span>
+              <div>
+                <div style={{
+                  fontSize: 14,
+                  fontWeight: 600,
+                  color: C.bone,
+                  marginBottom: 4,
+                }}>
+                  Windows Protection Notice
+                </div>
+                <p style={{
+                  fontSize: 13,
+                  color: C.bone40,
+                  margin: 0,
+                  lineHeight: 1.6,
+                }}>
+                  Windows may show a security message when you install. This is normal for new apps.
+                  <br />
+                  <br />
+                  Just click: <strong style={{ color: C.bone }}>More info</strong> → <strong style={{ color: C.bone }}>Run anyway</strong>
+                  <br />
+                  <br />
+                  <span style={{ fontSize: 12, color: C.bone20 }}>Your security matters — Project Focus is open-source and code-transparent.</span>
+                </p>
+              </div>
+            </div>
+          </div>
+
           <div style={{ display: 'flex', justifyContent: 'center', gap: 32, flexWrap: 'wrap' }}>
             {[
               { icon: '🔕', text: 'No terminal window' },
