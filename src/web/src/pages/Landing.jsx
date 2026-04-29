@@ -497,7 +497,7 @@ export default function Landing({ onEnterApp }) {
           maxWidth: '100%',
         }}>
           {[
-            '/videos/Woman_looking_at_202604281549 (1).mp4',
+            '/videos/20260427 Youtube Korea.mp4',
             '/videos/Woman_looking_at_202604281549.mp4',
             '/videos/Woman_looking_at_202604281602.mp4',
             '/videos/Winking_and_shrugging_202604281556 (1).mp4',
