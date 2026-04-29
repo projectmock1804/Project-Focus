@@ -317,19 +317,6 @@ export default function Landing({ onEnterApp }) {
             </svg>
             <span style={{ fontSize: 16, fontWeight: 600, fontFamily: F.title, fontStyle: 'italic' }}>focus.</span>
           </div>
-          <button onClick={onEnterApp} style={{
-            fontFamily: F.ui,
-            fontSize: 13,
-            padding: '10px 20px',
-            background: C.ember,
-            border: 'none',
-            borderRadius: 4,
-            color: C.bone,
-            cursor: 'pointer',
-            fontWeight: 600,
-          }}>
-            Get Started
-          </button>
         </div>
       </nav>
 
@@ -405,7 +392,7 @@ export default function Landing({ onEnterApp }) {
             Watch yourself work harder than ever before.
           </p>
 
-          {/* CTA Buttons */}
+          {/* CTA Button */}
           <div style={{
             display: 'flex',
             gap: 12,
@@ -440,28 +427,6 @@ export default function Landing({ onEnterApp }) {
             }}>
               <span>⬇</span> Download for Windows
             </a>
-            <button onClick={onEnterApp} style={{
-              fontFamily: F.ui,
-              fontSize: 14,
-              padding: '14px 28px',
-              background: 'transparent',
-              border: `1px solid ${C.border2}`,
-              borderRadius: 6,
-              color: C.bone40,
-              cursor: 'pointer',
-              fontWeight: 500,
-              transition: 'all 0.2s',
-            }}
-            onMouseEnter={(e) => {
-              e.style.borderColor = C.bone;
-              e.style.color = C.bone;
-            }}
-            onMouseLeave={(e) => {
-              e.style.borderColor = C.border2;
-              e.style.color = C.bone40;
-            }}>
-              Use Web Only
-            </button>
           </div>
 
           {/* Stats Line */}
@@ -1015,28 +980,6 @@ export default function Landing({ onEnterApp }) {
               >
                 <span>⬇</span> Download for Windows
               </a>
-              <button onClick={onEnterApp} style={{
-                fontFamily: F.ui,
-                fontSize: 14,
-                padding: '16px 36px',
-                background: 'transparent',
-                border: `1px solid ${C.border2}`,
-                borderRadius: 10,
-                color: C.bone40,
-                cursor: 'pointer',
-                fontWeight: 500,
-                transition: 'all 0.3s ease',
-              }}
-              onMouseEnter={(e) => {
-                e.style.borderColor = C.ember;
-                e.style.color = C.ember;
-              }}
-              onMouseLeave={(e) => {
-                e.style.borderColor = C.border2;
-                e.style.color = C.bone40;
-              }}>
-                Use Web Version →
-              </button>
             </div>
 
             {/* Features Grid */}
