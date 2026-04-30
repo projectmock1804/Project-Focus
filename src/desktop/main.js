@@ -39,6 +39,7 @@ const IS_PACKAGED = app.isPackaged;
 const PROD_WEB_URL = 'https://project-focus-mo3i.onrender.com';
 const DEV_WEB_URL = 'http://localhost:5174';
 const WEB_URL = IS_PACKAGED ? PROD_WEB_URL : DEV_WEB_URL;
+// Note: App.jsx automatically shows Dashboard if logged in, Landing if not
 const API_PORT = 3000;
 const ROOT_DIR = IS_PACKAGED
   ? path.join(process.resourcesPath, 'app')
