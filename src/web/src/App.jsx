@@ -129,14 +129,14 @@ export default function App() {
     }
 
     if (view.page === 'admin') {
-      return isAdmin ? <Admin onLogout={handleLogout} /> : <Dashboard onNavigateToTask={navigateToTask} showToast={showToast} onLogout={handleLogout} />;
+      return isAdmin ? <Admin onLogout={handleLogout} /> : <Dashboard onNavigateToTask={navigateToTask} showToast={showToast} onLogout={handleLogout} subscriptionStatus={subscriptionStatus} />;
     }
 
     if (view.page === 'task' && view.taskId) {
       return <TaskDetail taskId={view.taskId} onBack={navigateToDashboard} />;
     }
 
-    return <Dashboard onNavigateToTask={navigateToTask} showToast={showToast} onLogout={handleLogout} />;
+    return <Dashboard onNavigateToTask={navigateToTask} showToast={showToast} onLogout={handleLogout} subscriptionStatus={subscriptionStatus} />;
   };
 
   return (
