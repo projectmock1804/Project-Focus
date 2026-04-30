@@ -10,10 +10,27 @@
  * - Listen for IPC messages from the agent to show distraction popup windows
  */
 
-const { app, BrowserWindow, ipcMain, screen } = require('electron');
+const { app, BrowserWindow, ipcMain, screen, dialog } = require('electron');
 const path = require('path');
 const { spawn } = require('child_process');
 const fs = require('fs');
+
+// ---------------------------------------------------------------------------
+// Single-instance lock — prevents port conflicts when user launches twice
+// ---------------------------------------------------------------------------
+const gotTheLock = app.requestSingleInstanceLock();
+if (!gotTheLock) {
+  console.log('[Desktop] Another instance is already running. Exiting.');
+  app.quit();
+  process.exit(0);
+}
+app.on('second-instance', () => {
+  // Focus the existing window if user tries to launch a second instance
+  if (mainWindow) {
+    if (mainWindow.isMinimized()) mainWindow.restore();
+    mainWindow.focus();
+  }
+});
 
 // ---------------------------------------------------------------------------
 // Config
@@ -370,6 +387,13 @@ function setupStaticServer() {
     res.end('Not found');
   });
 
+  server.on('error', (err) => {
+    if (err.code === 'EADDRINUSE') {
+      console.warn('[Desktop] Static server port 3002 already in use — popup videos may not work');
+    } else {
+      console.error('[Desktop] Static server error:', err.message);
+    }
+  });
   server.listen(3002, '127.0.0.1', () => {
     console.log('[Desktop] Static server listening on http://127.0.0.1:3002');
   });

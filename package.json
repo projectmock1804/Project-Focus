@@ -1,8 +1,8 @@
 {
   "name": "project-focus",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "description": "Project Focus MVP - AI-powered focus tracker with Telegram, Gemini, and local JSON DB",
-  "main": "index.js",
+  "main": "src/desktop/main.js",
   "scripts": {
     "start": "node launcher.js",
     "api": "node index.js",
