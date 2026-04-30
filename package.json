@@ -1,6 +1,6 @@
 {
   "name": "project-focus",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "Project Focus MVP - AI-powered focus tracker with Telegram, Gemini, and local JSON DB",
   "main": "index.js",
   "scripts": {
@@ -63,7 +63,8 @@
       "artifactName": "Project-Focus-Setup.exe",
       "include": "build-scripts/installer.nsh"
     },
-    "asar": false
+    "asar": false,
+    "afterPack": "build-scripts/fix-hoisting.js"
   },
   "keywords": [
     "productivity",
