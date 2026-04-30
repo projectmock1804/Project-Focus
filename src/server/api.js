@@ -26,6 +26,8 @@ const {
   ensureIndexes,
   signUpUser,
   ensureUser,
+  checkSubscriptionStatus,
+  upgradeToPaid,
 } = require('../db/firebase');
 
 const router = express.Router();
@@ -82,6 +84,44 @@ router.post('/auth/ensure-user', async (req, res) => {
   } catch (err) {
     console.error('[API] /auth/ensure-user error:', err);
     res.status(400).json({ error: err.message });
+  }
+});
+
+// =============================================================================
+// GET /api/subscription/status
+// Check user's subscription status (free trial / paid / expired)
+// =============================================================================
+router.get('/subscription/status', async (req, res) => {
+  const userId = req.query.userId;
+  if (!userId) {
+    return res.status(400).json({ error: 'userId is required' });
+  }
+
+  try {
+    const status = await checkSubscriptionStatus(userId);
+    res.json(status);
+  } catch (err) {
+    console.error('[API] /subscription/status error:', err);
+    res.status(500).json({ error: 'Failed to check subscription status' });
+  }
+});
+
+// =============================================================================
+// POST /api/subscription/upgrade
+// Upgrade user to paid plan (called after successful Toss payment)
+// =============================================================================
+router.post('/subscription/upgrade', async (req, res) => {
+  const { userId, monthsToAdd } = req.body;
+  if (!userId) {
+    return res.status(400).json({ error: 'userId is required' });
+  }
+
+  try {
+    const result = await upgradeToPaid(userId, monthsToAdd || 1);
+    res.json({ success: true, ...result });
+  } catch (err) {
+    console.error('[API] /subscription/upgrade error:', err);
+    res.status(500).json({ error: 'Failed to upgrade subscription' });
   }
 });
 

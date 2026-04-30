@@ -204,6 +204,8 @@ async function updateTaskProgress(taskId, progressPct, status) {
 
 async function createUser(uid, userData) {
   const now = new Date().toISOString();
+  // Calculate 14 days from now for free trial
+  const freeTrialEndsAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString();
 
   const user = {
     uid,
@@ -213,6 +215,10 @@ async function createUser(uid, userData) {
     updatedAt: now,
     tasksCreated: 0,
     tasksCompleted: 0,
+    // Subscription fields
+    subscriptionStatus: 'free',  // 'free' | 'paid' | 'expired'
+    freeTrialEndsAt,             // ISO timestamp — 14 days from signup
+    paidUntil: null,             // ISO timestamp — only set when user upgrades
   };
 
   await db.collection(USERS_COLLECTION).doc(uid).set(user);
@@ -230,6 +236,70 @@ async function updateUser(uid, updates) {
     ...updates,
     updatedAt: now,
   });
+}
+
+// ============================================================================
+// Subscription Management
+// ============================================================================
+
+/**
+ * Check user's subscription status and return access info
+ * Returns: { hasAccess: boolean, status: string, expiresAt: ISO timestamp | null }
+ */
+async function checkSubscriptionStatus(uid) {
+  const user = await getUserById(uid);
+  if (!user) {
+    return { hasAccess: false, status: 'no_user', expiresAt: null };
+  }
+
+  const now = new Date();
+  const freeTrialEnds = user.freeTrialEndsAt ? new Date(user.freeTrialEndsAt) : null;
+  const paidUntil = user.paidUntil ? new Date(user.paidUntil) : null;
+
+  // Check free trial
+  if (freeTrialEnds && now < freeTrialEnds) {
+    return {
+      hasAccess: true,
+      status: 'free_trial',
+      expiresAt: user.freeTrialEndsAt,
+      daysLeft: Math.ceil((freeTrialEnds - now) / (1000 * 60 * 60 * 24)),
+    };
+  }
+
+  // Check paid subscription
+  if (paidUntil && now < paidUntil) {
+    return {
+      hasAccess: true,
+      status: 'paid',
+      expiresAt: user.paidUntil,
+      daysLeft: Math.ceil((paidUntil - now) / (1000 * 60 * 60 * 24)),
+    };
+  }
+
+  // Trial and paid both expired
+  return {
+    hasAccess: false,
+    status: 'expired',
+    expiresAt: paidUntil || freeTrialEnds,
+  };
+}
+
+/**
+ * Upgrade user to paid plan (called after successful Toss payment)
+ */
+async function upgradeToPaid(uid, monthsToAdd = 1) {
+  const paidUntil = new Date();
+  paidUntil.setMonth(paidUntil.getMonth() + monthsToAdd);
+
+  await updateUser(uid, {
+    subscriptionStatus: 'paid',
+    paidUntil: paidUntil.toISOString(),
+  });
+
+  return {
+    status: 'paid',
+    paidUntil: paidUntil.toISOString(),
+  };
 }
 
 async function incrementUserStats(uid, field) {
@@ -412,6 +482,10 @@ module.exports = {
   signUpUser,
   ensureUser,
   getUserByEmail,
+
+  // Subscription operations
+  checkSubscriptionStatus,
+  upgradeToPaid,
 
   // Initialization
   ensureIndexes,

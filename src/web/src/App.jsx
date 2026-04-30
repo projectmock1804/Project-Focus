@@ -4,6 +4,7 @@ import Dashboard from './pages/Dashboard.jsx';
 import TaskDetail from './pages/TaskDetail.jsx';
 import Auth from './pages/Auth.jsx';
 import Admin from './pages/Admin.jsx';
+import UpgradePage from './pages/UpgradePage.jsx';
 import { useToast } from './hooks/useToast.js';
 import { ToastProvider } from './components/Toast.jsx';
 import { auth } from './firebase.js';
@@ -15,6 +16,8 @@ export default function App() {
   const [userId, setUserId] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [authLoading, setAuthLoading] = useState(true);
+  const [subscriptionStatus, setSubscriptionStatus] = useState(null);
+  const [subscriptionLoading, setSubscriptionLoading] = useState(false);
   const { toasts, showToast } = useToast();
 
   // Firebase auth state listener — persists sessions across page refreshes
@@ -30,11 +33,31 @@ export default function App() {
         setIsAuthenticated(false);
         setUserId(null);
         setIsAdmin(false);
+        setSubscriptionStatus(null);
       }
       setAuthLoading(false);
     });
     return () => unsubscribe();
   }, []);
+
+  // Fetch subscription status when user authenticates
+  useEffect(() => {
+    if (isAuthenticated && userId && !isAdmin) {
+      setSubscriptionLoading(true);
+      fetch(`/api/subscription/status?userId=${userId}`)
+        .then(res => res.json())
+        .then(data => {
+          setSubscriptionStatus(data);
+          setSubscriptionLoading(false);
+        })
+        .catch(err => {
+          console.error('Failed to fetch subscription status:', err);
+          // Default to allowing access if check fails
+          setSubscriptionStatus({ hasAccess: true, status: 'free_trial', daysLeft: 14 });
+          setSubscriptionLoading(false);
+        });
+    }
+  }, [isAuthenticated, userId, isAdmin]);
 
   function handleSignIn(uid) {
     setIsAuthenticated(true);
@@ -75,7 +98,7 @@ export default function App() {
     setView({ page: 'landing', taskId: null });
   }
 
-  if (authLoading) {
+  if (authLoading || (isAuthenticated && !isAdmin && subscriptionLoading)) {
     return (
       <div style={{ display: 'flex', height: '100vh', alignItems: 'center', justifyContent: 'center', background: '#0E0E0C' }}>
         <div style={{ color: 'rgba(242,240,235,0.4)', fontFamily: 'Inter, sans-serif', fontSize: 14 }}>Loading...</div>
@@ -98,6 +121,11 @@ export default function App() {
     // Authenticated pages
     if (!isAuthenticated) {
       return <Landing onEnterApp={() => setView({ page: 'auth' })} />;
+    }
+
+    // Check subscription before allowing dashboard access
+    if (!isAdmin && subscriptionStatus && !subscriptionStatus.hasAccess) {
+      return <UpgradePage subscriptionInfo={subscriptionStatus} onLogout={handleLogout} />;
     }
 
     if (view.page === 'admin') {
