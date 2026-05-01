@@ -42,7 +42,8 @@ export default function App() {
 
   // Fetch subscription status when user authenticates
   useEffect(() => {
-    if (isAuthenticated && userId && !isAdmin) {
+    // Only check subscription if auth has loaded and user is actually authenticated
+    if (!authLoading && isAuthenticated && userId && !isAdmin) {
       setSubscriptionLoading(true);
       fetch(`/api/subscription/status?userId=${userId}`)
         .then(res => res.json())
@@ -56,8 +57,12 @@ export default function App() {
           setSubscriptionStatus({ hasAccess: true, status: 'free_trial', daysLeft: 14 });
           setSubscriptionLoading(false);
         });
+    } else if (!authLoading && !isAuthenticated) {
+      // Reset subscription status if user is not authenticated
+      setSubscriptionStatus(null);
+      setSubscriptionLoading(false);
     }
-  }, [isAuthenticated, userId, isAdmin]);
+  }, [authLoading, isAuthenticated, userId, isAdmin]);
 
   // Auto-navigate away from landing page when authenticated
   useEffect(() => {
@@ -118,21 +123,17 @@ export default function App() {
   }
 
   const renderPage = () => {
-    // Unauthenticated pages
-    if (view.page === 'landing') {
-      return <Landing onEnterApp={() => setView({ page: 'auth' })} />;
-    }
-
-    if (view.page === 'auth') {
-      return <Auth onSignIn={handleSignIn} />;
-    }
-
-    // Authenticated pages
+    // Not authenticated - show auth flow
     if (!isAuthenticated) {
+      if (view.page === 'auth') {
+        return <Auth onSignIn={handleSignIn} />;
+      }
+      // Default to auth page for non-authenticated users
       return <Landing onEnterApp={() => setView({ page: 'auth' })} />;
     }
 
-    // Check subscription before allowing dashboard access
+    // Authenticated users only
+    // Check subscription status before showing dashboard
     if (!isAdmin && subscriptionStatus && !subscriptionStatus.hasAccess) {
       return <UpgradePage subscriptionInfo={subscriptionStatus} onLogout={handleLogout} />;
     }
