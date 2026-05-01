@@ -59,6 +59,17 @@ export default function App() {
     }
   }, [isAuthenticated, userId, isAdmin]);
 
+  // Auto-navigate away from landing page when authenticated
+  useEffect(() => {
+    if (isAuthenticated && view.page === 'landing') {
+      if (isAdmin) {
+        setView({ page: 'admin', taskId: null });
+      } else {
+        setView({ page: 'dashboard', taskId: null });
+      }
+    }
+  }, [isAuthenticated, isAdmin]);
+
   function handleSignIn(uid) {
     setIsAuthenticated(true);
     setUserId(uid);
@@ -109,9 +120,7 @@ export default function App() {
   const renderPage = () => {
     // Unauthenticated pages
     if (view.page === 'landing') {
-      return isAuthenticated ?
-        <Landing onEnterApp={() => isAdmin ? setView({ page: 'admin' }) : setView({ page: 'dashboard' })} /> :
-        <Landing onEnterApp={() => setView({ page: 'auth' })} />;
+      return <Landing onEnterApp={() => setView({ page: 'auth' })} />;
     }
 
     if (view.page === 'auth') {
