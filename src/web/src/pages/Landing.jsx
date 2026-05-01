@@ -334,12 +334,16 @@ export default function Landing({ onEnterApp }) {
             transition: 'all 0.2s',
           }}
           onMouseEnter={(e) => {
-            e.style.transform = 'translateY(-1px)';
-            e.style.boxShadow = `0 6px 16px rgba(232, 107, 58, 0.3)`;
+            if (e.currentTarget) {
+              e.currentTarget.style.transform = 'translateY(-1px)';
+              e.currentTarget.style.boxShadow = `0 6px 16px rgba(232, 107, 58, 0.3)`;
+            }
           }}
           onMouseLeave={(e) => {
-            e.style.transform = 'translateY(0)';
-            e.style.boxShadow = 'none';
+            if (e.currentTarget) {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = 'none';
+            }
           }}>
             <span>⬇</span> Download
           </a>
@@ -444,12 +448,16 @@ export default function Landing({ onEnterApp }) {
               gap: 8,
             }}
             onMouseEnter={(e) => {
-              e.style.transform = 'translateY(-2px)';
-              e.style.boxShadow = `0 12px 32px rgba(232, 107, 58, 0.4)`;
+              if (e.currentTarget) {
+                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.boxShadow = `0 12px 32px rgba(232, 107, 58, 0.4)`;
+              }
             }}
             onMouseLeave={(e) => {
-              e.style.transform = 'translateY(0)';
-              e.style.boxShadow = `0 8px 24px rgba(232, 107, 58, 0.3)`;
+              if (e.currentTarget) {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = `0 8px 24px rgba(232, 107, 58, 0.3)`;
+              }
             }}>
               <span>⬇</span> Download for Windows
             </a>
