@@ -11,7 +11,13 @@ import { auth } from './firebase.js';
 import { onAuthStateChanged } from 'firebase/auth';
 
 export default function App() {
-  const [view, setView] = useState({ page: 'landing', taskId: null });
+  // Detect if running in Electron (desktop app)
+  const isElectron = typeof window !== 'undefined' && window.process?.type === 'renderer';
+
+  // Start with 'auth' in Electron (skip landing page), 'landing' in browser
+  const initialPage = isElectron ? 'auth' : 'landing';
+
+  const [view, setView] = useState({ page: initialPage, taskId: null });
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userId, setUserId] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -99,7 +105,8 @@ export default function App() {
     setIsAuthenticated(false);
     setUserId(null);
     setIsAdmin(false);
-    setView({ page: 'landing', taskId: null });
+    // In Electron, go to auth page. In browser, go to landing page.
+    setView({ page: isElectron ? 'auth' : 'landing', taskId: null });
   }
 
   function navigateToTask(taskId) {
