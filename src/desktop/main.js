@@ -199,8 +199,8 @@ function createMainWindow() {
     mainWindow = null;
   });
 
-  // Open DevTools in dev mode
-  if (process.env.NODE_ENV === 'development') {
+  // Open DevTools in dev mode (or when not packaged)
+  if (!IS_PACKAGED) {
     mainWindow.webContents.openDevTools({ mode: 'detach' });
   }
 }
