@@ -76,10 +76,10 @@ export default function Auth({ onSignIn }) {
         userCredential = await signInWithEmailAndPassword(auth, email, password);
       }
 
-      const { uid } = userCredential.user;
+      const { uid, email: userEmail } = userCredential.user;
       localStorage.setItem('userId', uid);
       localStorage.setItem('displayName', userCredential.user.displayName || displayName || email.split('@')[0]);
-      onSignIn(uid);
+      onSignIn(uid, userEmail || email);
     } catch (err) {
       setError(friendlyError(err.code));
     } finally {
@@ -97,7 +97,7 @@ export default function Auth({ onSignIn }) {
       await syncUser(uid, userEmail, googleName);
       localStorage.setItem('userId', uid);
       localStorage.setItem('displayName', googleName || userEmail.split('@')[0]);
-      onSignIn(uid);
+      onSignIn(uid, userEmail);
     } catch (err) {
       if (err.code !== 'auth/popup-closed-by-user' && err.code !== 'auth/cancelled-popup-request') {
         setError(friendlyError(err.code));

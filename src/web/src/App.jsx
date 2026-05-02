@@ -4,7 +4,6 @@ import Dashboard from './pages/Dashboard.jsx';
 import TaskDetail from './pages/TaskDetail.jsx';
 import Auth from './pages/Auth.jsx';
 import Admin from './pages/Admin.jsx';
-import UpgradePage from './pages/UpgradePage.jsx';
 import { useToast } from './hooks/useToast.js';
 import { ToastProvider } from './components/Toast.jsx';
 import { auth } from './firebase.js';
@@ -25,53 +24,29 @@ export default function App() {
   const [userId, setUserId] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [authLoading, setAuthLoading] = useState(true);
-  const [subscriptionStatus, setSubscriptionStatus] = useState(null);
-  const [subscriptionLoading, setSubscriptionLoading] = useState(false);
   const { toasts, showToast } = useToast();
 
   // Firebase auth state listener — persists sessions across page refreshes
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
-        const isAdminUser = localStorage.getItem('isAdmin') === 'true';
+        const isAdminUser = user.email === 'projectmock1804@gmail.com';
+        localStorage.setItem('isAdmin', isAdminUser ? 'true' : 'false');
         setIsAuthenticated(true);
         setUserId(user.uid);
         setIsAdmin(isAdminUser);
         localStorage.setItem('userId', user.uid);
+        // Auto-navigate authenticated users
+        setView({ page: isAdminUser ? 'admin' : 'dashboard', taskId: null });
       } else {
         setIsAuthenticated(false);
         setUserId(null);
         setIsAdmin(false);
-        setSubscriptionStatus(null);
       }
       setAuthLoading(false);
     });
     return () => unsubscribe();
   }, []);
-
-  // Fetch subscription status when user authenticates
-  useEffect(() => {
-    // Only check subscription if auth has loaded and user is actually authenticated
-    if (!authLoading && isAuthenticated && userId && !isAdmin) {
-      setSubscriptionLoading(true);
-      fetch(`/api/subscription/status?userId=${userId}`)
-        .then(res => res.json())
-        .then(data => {
-          setSubscriptionStatus(data);
-          setSubscriptionLoading(false);
-        })
-        .catch(err => {
-          console.error('Failed to fetch subscription status:', err);
-          // Default to allowing access if check fails
-          setSubscriptionStatus({ hasAccess: true, status: 'free_trial', daysLeft: 14 });
-          setSubscriptionLoading(false);
-        });
-    } else if (!authLoading && !isAuthenticated) {
-      // Reset subscription status if user is not authenticated
-      setSubscriptionStatus(null);
-      setSubscriptionLoading(false);
-    }
-  }, [authLoading, isAuthenticated, userId, isAdmin]);
 
   // Auto-navigate away from landing page when authenticated
   useEffect(() => {
@@ -84,20 +59,14 @@ export default function App() {
     }
   }, [isAuthenticated, isAdmin]);
 
-  function handleSignIn(uid) {
+  function handleSignIn(uid, email) {
+    const isAdminUser = email === 'projectmock1804@gmail.com';
+    if (isAdminUser) localStorage.setItem('isAdmin', 'true');
+    else localStorage.removeItem('isAdmin');
     setIsAuthenticated(true);
     setUserId(uid);
-
-    // Check if admin
-    const isAdminUser = localStorage.getItem('isAdmin') === 'true';
     setIsAdmin(isAdminUser);
-
-    // Navigate to dashboard or admin
-    if (isAdminUser) {
-      setView({ page: 'admin', taskId: null });
-    } else {
-      setView({ page: 'dashboard', taskId: null });
-    }
+    setView({ page: isAdminUser ? 'admin' : 'dashboard', taskId: null });
   }
 
   function handleLogout() {
@@ -124,7 +93,7 @@ export default function App() {
     setView({ page: 'landing', taskId: null });
   }
 
-  if (authLoading || (isAuthenticated && !isAdmin && subscriptionLoading)) {
+  if (authLoading) {
     return (
       <div style={{ display: 'flex', height: '100vh', alignItems: 'center', justifyContent: 'center', background: '#0E0E0C' }}>
         <div style={{ color: 'rgba(242,240,235,0.4)', fontFamily: 'Inter, sans-serif', fontSize: 14 }}>Loading...</div>
@@ -143,20 +112,15 @@ export default function App() {
     }
 
     // Authenticated users only
-    // Check subscription status before showing dashboard
-    if (!isAdmin && subscriptionStatus && !subscriptionStatus.hasAccess) {
-      return <UpgradePage subscriptionInfo={subscriptionStatus} onLogout={handleLogout} />;
-    }
-
     if (view.page === 'admin') {
-      return isAdmin ? <Admin onLogout={handleLogout} /> : <Dashboard onNavigateToTask={navigateToTask} showToast={showToast} onLogout={handleLogout} subscriptionStatus={subscriptionStatus} />;
+      return isAdmin ? <Admin onLogout={handleLogout} /> : <Dashboard onNavigateToTask={navigateToTask} showToast={showToast} onLogout={handleLogout} />;
     }
 
     if (view.page === 'task' && view.taskId) {
       return <TaskDetail taskId={view.taskId} onBack={navigateToDashboard} />;
     }
 
-    return <Dashboard onNavigateToTask={navigateToTask} showToast={showToast} onLogout={handleLogout} subscriptionStatus={subscriptionStatus} />;
+    return <Dashboard onNavigateToTask={navigateToTask} showToast={showToast} onLogout={handleLogout} />;
   };
 
   return (

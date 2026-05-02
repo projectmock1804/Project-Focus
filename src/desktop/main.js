@@ -231,26 +231,20 @@ function detectSiteName(windowTitle, displayMode = false) {
 }
 
 // ---------------------------------------------------------------------------
-// Get random video from KOR Video/vertical folder (max 4 videos for non-YouTube)
+// Get random video from KOR Video/{type} folder
 // ---------------------------------------------------------------------------
-function getRandomVideo(maxVideos = null) {
+function getRandomVideo(type = 'vertical', maxVideos = null) {
   try {
-    const videoDir = path.join(app.getPath('userData'), '..', '..', 'Project Focus', 'KOR Video', 'vertical');
-    const fs = require('fs');
-
+    const videoDir = path.join(ROOT_DIR, 'KOR Video', type);
     if (!fs.existsSync(videoDir)) {
       console.log('[Desktop] Video directory not found:', videoDir);
       return null;
     }
-
     const files = fs.readdirSync(videoDir).filter(f => /\.(mp4|webm|mov|mkv)$/i.test(f));
-
     if (files.length === 0) {
       console.log('[Desktop] No video files found in:', videoDir);
       return null;
     }
-
-    // Limit to maxVideos if specified
     const availableFiles = maxVideos && files.length > maxVideos ? files.slice(0, maxVideos) : files;
     const randomFile = availableFiles[Math.floor(Math.random() * availableFiles.length)];
     return path.join(videoDir, randomFile);
@@ -277,11 +271,11 @@ function showDistractionPopup({ distractedMinutes, windowTitle }) {
   const isYouTube = (windowTitle || '').toLowerCase().includes('youtube');
   let videoPath = null;
 
-  if (!isYouTube) {
-    // For non-YouTube distractions: random from 4 videos
-    videoPath = getRandomVideo(4);
+  if (isYouTube) {
+    videoPath = getRandomVideo('youtube');
+  } else {
+    videoPath = getRandomVideo('vertical', 4);
   }
-  // For YouTube: no video path (use the default YouTube Korea video from static server)
 
   // Popup size based on whether showing video
   const hasVideo = isYouTube || videoPath;
@@ -370,8 +364,12 @@ function setupStaticServer() {
   const server = http.createServer((req, res) => {
     // Serve video file
     if (req.url === '/video.mp4' || req.url.startsWith('/video.mp4?')) {
-      const videoPath = path.join(ROOT_DIR, '20260427 Youtube Korea.mp4');
-      if (!fs.existsSync(videoPath)) {
+      const youtubeDir = path.join(ROOT_DIR, 'KOR Video', 'youtube');
+      const ytFiles = fs.existsSync(youtubeDir) ? fs.readdirSync(youtubeDir).filter(f => /\.mp4$/i.test(f)) : [];
+      const videoPath = ytFiles.length > 0
+        ? path.join(youtubeDir, ytFiles[Math.floor(Math.random() * ytFiles.length)])
+        : null;
+      if (!videoPath || !fs.existsSync(videoPath)) {
         res.writeHead(404);
         res.end('Video not found');
         return;

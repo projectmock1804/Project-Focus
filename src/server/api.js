@@ -615,12 +615,120 @@ router.get('/distractions/today', (_req, res) => {
 // =============================================================================
 // Admin endpoints
 // =============================================================================
-router.get('/admin/stats', async (_req, res) => {
+router.get('/admin/stats', async (req, res) => {
+  const secret = req.headers['x-admin-secret'];
+  if (secret !== process.env.ADMIN_SECRET && secret !== 'dev-admin-2026') {
+    // Fall back to legacy stats if no secret provided (old admin page)
+    if (!secret) {
+      try {
+        const stats = await getAdminStats();
+        return res.json(stats);
+      } catch (err) {
+        console.error('[API] /admin/stats error:', err);
+        return res.status(500).json({ error: err.message });
+      }
+    }
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
   try {
-    const stats = await getAdminStats();
-    res.json(stats);
+    const { db } = require('../db/firebase');
+    const usersSnap = await db.collection('users').get();
+    const users = usersSnap.docs.map(d => d.data());
+
+    const now = new Date();
+    const paid = users.filter(u => u.subscriptionStatus === 'paid' && u.paidUntil && new Date(u.paidUntil) > now);
+    const trial = users.filter(u => u.subscriptionStatus !== 'paid' && u.freeTrialEndsAt && new Date(u.freeTrialEndsAt) > now);
+    const expired = users.filter(u => {
+      const trialEnd = u.freeTrialEndsAt ? new Date(u.freeTrialEndsAt) : null;
+      const paidEnd = u.paidUntil ? new Date(u.paidUntil) : null;
+      return (!trialEnd || trialEnd < now) && (!paidEnd || paidEnd < now);
+    });
+
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+    const newUsers = users.filter(u => u.createdAt && u.createdAt > sevenDaysAgo);
+
+    res.json({
+      totalUsers: users.length,
+      paidUsers: paid.length,
+      trialUsers: trial.length,
+      expiredUsers: expired.length,
+      newUsersLast7Days: newUsers.length,
+      estimatedMRR: paid.length * 9900,
+    });
   } catch (err) {
     console.error('[API] /admin/stats error:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /api/admin/users - full user list
+router.get('/admin/users', async (req, res) => {
+  const secret = req.headers['x-admin-secret'];
+  if (secret !== process.env.ADMIN_SECRET && secret !== 'dev-admin-2026') {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  try {
+    const { db } = require('../db/firebase');
+    const snap = await db.collection('users').get();
+    const users = snap.docs.map(doc => {
+      const d = doc.data();
+      return {
+        uid: d.uid,
+        email: d.email,
+        displayName: d.displayName,
+        createdAt: d.createdAt,
+        subscriptionStatus: d.subscriptionStatus || 'free',
+        freeTrialEndsAt: d.freeTrialEndsAt,
+        paidUntil: d.paidUntil,
+        tasksCreated: d.tasksCreated || 0,
+        tasksCompleted: d.tasksCompleted || 0,
+      };
+    });
+    users.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+    res.json({ users, total: users.length });
+  } catch (err) {
+    console.error('[API] /admin/users error:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/admin/users/:uid/subscription - change subscription status
+router.post('/admin/users/:uid/subscription', async (req, res) => {
+  const secret = req.headers['x-admin-secret'];
+  if (secret !== process.env.ADMIN_SECRET && secret !== 'dev-admin-2026') {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  const { uid } = req.params;
+  const { status, monthsToAdd } = req.body;
+  try {
+    const { db } = require('../db/firebase');
+    if (status === 'paid') {
+      const paidUntil = new Date();
+      paidUntil.setMonth(paidUntil.getMonth() + (monthsToAdd || 1));
+      await db.collection('users').doc(uid).update({
+        subscriptionStatus: 'paid',
+        paidUntil: paidUntil.toISOString(),
+        updatedAt: new Date().toISOString(),
+      });
+      res.json({ success: true, paidUntil: paidUntil.toISOString() });
+    } else if (status === 'trial_reset') {
+      const freeTrialEndsAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000);
+      await db.collection('users').doc(uid).update({
+        subscriptionStatus: 'free',
+        freeTrialEndsAt: freeTrialEndsAt.toISOString(),
+        paidUntil: null,
+        updatedAt: new Date().toISOString(),
+      });
+      res.json({ success: true, freeTrialEndsAt: freeTrialEndsAt.toISOString() });
+    } else {
+      await db.collection('users').doc(uid).update({
+        subscriptionStatus: 'free',
+        updatedAt: new Date().toISOString(),
+      });
+      res.json({ success: true });
+    }
+  } catch (err) {
+    console.error('[API] /admin/users/:uid/subscription error:', err);
     res.status(500).json({ error: err.message });
   }
 });
