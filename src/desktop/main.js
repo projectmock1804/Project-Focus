@@ -188,7 +188,9 @@ function createMainWindow() {
     show: false,
   });
 
-  mainWindow.loadURL(WEB_URL);
+  // Add ?mode=desktop so React knows it's running inside Electron
+  const loadURL = WEB_URL.includes('?') ? `${WEB_URL}&mode=desktop` : `${WEB_URL}?mode=desktop`;
+  mainWindow.loadURL(loadURL);
 
   mainWindow.once('ready-to-show', () => {
     mainWindow.show();

@@ -11,8 +11,11 @@ import { auth } from './firebase.js';
 import { onAuthStateChanged } from 'firebase/auth';
 
 export default function App() {
-  // Detect if running in Electron (desktop app)
-  const isElectron = typeof window !== 'undefined' && window.process?.type === 'renderer';
+  // Detect if running in Electron via URL param (set by main.js) or userAgent
+  const isElectron = (typeof window !== 'undefined') && (
+    new URLSearchParams(window.location.search).get('mode') === 'desktop' ||
+    navigator.userAgent.includes('Electron')
+  );
 
   // Start with 'auth' in Electron (skip landing page), 'landing' in browser
   const initialPage = isElectron ? 'auth' : 'landing';
