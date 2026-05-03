@@ -4,6 +4,7 @@ import Dashboard from './pages/Dashboard.jsx';
 import TaskDetail from './pages/TaskDetail.jsx';
 import Auth from './pages/Auth.jsx';
 import Admin from './pages/Admin.jsx';
+import AdminLogin from './pages/AdminLogin.jsx';
 import { useToast } from './hooks/useToast.js';
 import { ToastProvider } from './components/Toast.jsx';
 import { auth } from './firebase.js';
@@ -16,7 +17,9 @@ export default function App() {
     navigator.userAgent.includes('Electron')
   );
 
-  // Check URL for admin page access
+  // Check URL for admin page access (두 가지 방법으로 접근 가능)
+  // 방법 1: /admin URL로 직접 접근
+  // 방법 2: ?admin=dev-admin-2026 파라미터로 접근
   const urlParams = new URLSearchParams(window.location.search);
   const adminSecret = urlParams.get('admin');
   const isAdminUrl = window.location.pathname === '/admin' || adminSecret === 'dev-admin-2026';
@@ -29,6 +32,7 @@ export default function App() {
   const [userId, setUserId] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [authLoading, setAuthLoading] = useState(true);
+  const [adminAuthenticated, setAdminAuthenticated] = useState(false);
   const { toasts, showToast } = useToast();
 
   // Firebase auth state listener — persists sessions across page refreshes
@@ -101,6 +105,16 @@ export default function App() {
     setView({ page: 'landing', taskId: null });
   }
 
+  function handleAdminAccess() {
+    setAdminAuthenticated(true);
+  }
+
+  function handleAdminLogout() {
+    setAdminAuthenticated(false);
+    // Redirect to admin login
+    window.location.href = '/admin';
+  }
+
   if (authLoading) {
     return (
       <div style={{ display: 'flex', height: '100vh', alignItems: 'center', justifyContent: 'center', background: '#0E0E0C' }}>
@@ -110,17 +124,25 @@ export default function App() {
   }
 
   const renderPage = () => {
+    // Admin page access (no Firebase auth required, just secret)
+    if (isAdminUrl) {
+      if (!adminAuthenticated) {
+        return <AdminLogin onAdminAccess={handleAdminAccess} />;
+      }
+      return <Admin onLogout={handleAdminLogout} />;
+    }
+
     // Not authenticated - show auth flow
     if (!isAuthenticated) {
       if (view.page === 'auth') {
         return <Auth onSignIn={handleSignIn} />;
       }
       // Default to auth page for non-authenticated users (or landing in browser)
-      return isAdminUrl ? <Auth onSignIn={handleSignIn} /> : <Landing onEnterApp={() => setView({ page: 'auth' })} />;
+      return <Landing onEnterApp={() => setView({ page: 'auth' })} />;
     }
 
-    // Authenticated users - check for admin page access
-    if (isAdminUrl || view.page === 'admin') {
+    // Authenticated users - check for admin page access via email
+    if (view.page === 'admin') {
       return isAdmin ? <Admin onLogout={handleLogout} /> : <Dashboard onNavigateToTask={navigateToTask} showToast={showToast} onLogout={handleLogout} />;
     }
 
