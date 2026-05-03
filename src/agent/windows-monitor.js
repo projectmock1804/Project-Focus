@@ -91,6 +91,12 @@ const DISTRACTION_KEYWORDS = [
   '에브리타임',
   'wikipedia',
   'wiki',
+
+  // 메신저 앱 타이틀 (프로세스 감지 실패 시 타이틀로 fallback)
+  'kakaotalk',
+  '카카오톡',
+  'telegram',
+  'discord',
 ];
 
 // How many seconds of distraction before we send an alert
@@ -136,7 +142,7 @@ function getActiveWindowTitle() {
         `powershell -NoProfile -NonInteractive -File "${tempFile.replace(/"/g, '\\"')}" 2>&1`,
         {
           encoding: 'utf8',
-          timeout: 1500,
+          timeout: 4000,
           maxBuffer: 10 * 1024 * 1024,
           stdio: ['pipe', 'pipe', 'pipe']
         }
@@ -202,7 +208,7 @@ function getActiveProcessName() {
         `powershell -NoProfile -NonInteractive -File "${tempFile.replace(/"/g, '\\"')}" 2>&1`,
         {
           encoding: 'utf8',
-          timeout: 1500,
+          timeout: 4000,
           maxBuffer: 10 * 1024 * 1024,
           stdio: ['pipe', 'pipe', 'pipe']
         }

@@ -199,6 +199,8 @@ function createMainWindow() {
 
   mainWindow.on('closed', () => {
     mainWindow = null;
+    // Only quit the app when the MAIN window closes (not when popup closes)
+    app.quit();
   });
 
   // Open DevTools in dev mode (or when not packaged)
@@ -600,8 +602,8 @@ app.whenReady().then(async () => {
 });
 
 app.on('window-all-closed', () => {
-  // On Windows/Linux, quit when all windows closed
-  if (process.platform !== 'darwin') app.quit();
+  // Do NOT quit here — we handle quit in mainWindow.on('closed')
+  // This prevents closing a popup from killing the whole app
 });
 
 app.on('activate', () => {
