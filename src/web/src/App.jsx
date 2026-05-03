@@ -16,6 +16,11 @@ export default function App() {
     navigator.userAgent.includes('Electron')
   );
 
+  // Check URL for admin page access
+  const urlParams = new URLSearchParams(window.location.search);
+  const adminSecret = urlParams.get('admin');
+  const isAdminUrl = window.location.pathname === '/admin' || adminSecret === 'dev-admin-2026';
+
   // Start with 'auth' in Electron (skip landing page), 'landing' in browser
   const initialPage = isElectron ? 'auth' : 'landing';
 
@@ -110,12 +115,12 @@ export default function App() {
       if (view.page === 'auth') {
         return <Auth onSignIn={handleSignIn} />;
       }
-      // Default to auth page for non-authenticated users
-      return <Landing onEnterApp={() => setView({ page: 'auth' })} />;
+      // Default to auth page for non-authenticated users (or landing in browser)
+      return isAdminUrl ? <Auth onSignIn={handleSignIn} /> : <Landing onEnterApp={() => setView({ page: 'auth' })} />;
     }
 
-    // Authenticated users only
-    if (view.page === 'admin') {
+    // Authenticated users - check for admin page access
+    if (isAdminUrl || view.page === 'admin') {
       return isAdmin ? <Admin onLogout={handleLogout} /> : <Dashboard onNavigateToTask={navigateToTask} showToast={showToast} onLogout={handleLogout} />;
     }
 
