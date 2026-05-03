@@ -61,7 +61,9 @@ export default function App() {
   }, [isAuthenticated, isAdmin]);
 
   function handleSignIn(uid, email) {
-    const isAdminUser = email === 'projectmock1804@gmail.com';
+    // In Electron app, never set admin - always go to dashboard
+    // In web browser, admin is determined by email (only for web access)
+    const isAdminUser = !isElectron && email === 'projectmock1804@gmail.com';
     if (isAdminUser) localStorage.setItem('isAdmin', 'true');
     else localStorage.removeItem('isAdmin');
     setIsAuthenticated(true);
