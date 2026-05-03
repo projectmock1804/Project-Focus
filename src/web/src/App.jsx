@@ -30,14 +30,15 @@ export default function App() {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
-        const isAdminUser = user.email === 'projectmock1804@gmail.com';
-        localStorage.setItem('isAdmin', isAdminUser ? 'true' : 'false');
+        // In Electron app, everyone goes to dashboard
+        // Admin page is only accessible via /admin URL in web browser
         setIsAuthenticated(true);
         setUserId(user.uid);
-        setIsAdmin(isAdminUser);
+        setIsAdmin(false);  // Never auto-set admin in Electron
         localStorage.setItem('userId', user.uid);
-        // Auto-navigate authenticated users
-        setView({ page: isAdminUser ? 'admin' : 'dashboard', taskId: null });
+        localStorage.removeItem('isAdmin');
+        // Always go to dashboard in Electron
+        setView({ page: 'dashboard', taskId: null });
       } else {
         setIsAuthenticated(false);
         setUserId(null);
