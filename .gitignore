@@ -40,3 +40,4 @@ Thumbs.db
 data/
 *.json
 !package.json
+dist-electron/
