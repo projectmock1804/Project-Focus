@@ -17,6 +17,8 @@
     "desktop": "concurrently --kill-others-on-fail --names \"WEB,ELECTRON\" --prefix-colors \"cyan,yellow\" \"npm run web\" \"wait-on http-get://localhost:5173 && electron src/desktop/main.js\"",
     "desktop:start": "electron src/desktop/main.js",
     "build:electron": "electron-builder --win",
+    "build:electron:mac": "electron-builder --mac",
+    "build:electron:all": "electron-builder --win --mac",
     "test": "echo \"No tests configured yet\""
   },
   "build": {
@@ -53,6 +55,39 @@
         }
       ],
       "icon": "src/desktop/icon.png"
+    },
+    "mac": {
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
+      ],
+      "icon": "src/desktop/icon.png",
+      "category": "public.app-category.productivity"
+    },
+    "dmg": {
+      "contents": [
+        {
+          "x": 110,
+          "y": 150,
+          "type": "file"
+        },
+        {
+          "x": 240,
+          "y": 150,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ],
+      "window": {
+        "width": 500,
+        "height": 500
+      },
+      "artifactName": "Project-Focus-${version}.dmg"
     },
     "nsis": {
       "oneClick": false,
