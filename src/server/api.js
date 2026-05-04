@@ -45,6 +45,13 @@ const distractionsLog = {};
 
 console.log('[API] Router initialization starting');
 
+// Generate daily admin secret (focusMMDD)
+const today = new Date();
+const month = String(today.getMonth() + 1).padStart(2, '0');
+const date = String(today.getDate()).padStart(2, '0');
+const DAILY_SECRET = `focus${month}${date}`;
+console.log(`[API] Today's admin secret: ${DAILY_SECRET}`);
+
 // Request logger
 router.use((req, _res, next) => {
   console.log(`[API] ${req.method} ${req.path} ${new Date().toISOString()}`);
@@ -646,7 +653,7 @@ router.get('/distractions/today', (_req, res) => {
 // =============================================================================
 router.get('/admin/stats', async (req, res) => {
   const secret = req.headers['x-admin-secret'];
-  const validSecret = process.env.ADMIN_SECRET || 'focusmin0504';
+  const validSecret = process.env.ADMIN_SECRET || DAILY_SECRET;
   if (secret !== validSecret) {
     // Fall back to legacy stats if no secret provided (old admin page)
     if (!secret) {
