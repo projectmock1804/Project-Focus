@@ -1061,14 +1061,14 @@ function DashboardContent({ tasks, onNewTask }) {
         .dash-section:nth-child(5) { animation-delay: 0.33s; }
       `}</style>
 
-      {/* Two-column layout: Today's progress (left) and Next Milestone (right) */}
+      {/* Top row: Today's progress (left) + Distraction Settings (right) — always visible */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: hasInProgress ? '1fr 1fr' : '1fr',
+        gridTemplateColumns: '1fr 1fr',
         gap: 16,
-        alignItems: 'stretch',
+        alignItems: 'start',
       }}>
-        {/* Today's progress - Left Box */}
+        {/* Today's progress - Left */}
         <div className="dash-section" style={{
           background: C.graphite,
           border: `1px solid ${C.border}`,
@@ -1086,12 +1086,8 @@ function DashboardContent({ tasks, onNewTask }) {
             Today's progress
           </div>
 
-          {/* Completed + In Progress Stats (stacked) */}
-          <div style={{
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 12,
-          }}>
+          {/* Completed + In Progress Stats */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <div style={{
               background: C.surface,
               border: `1px solid ${C.border2}`,
@@ -1121,33 +1117,33 @@ function DashboardContent({ tasks, onNewTask }) {
           </div>
         </div>
 
-        {/* Next Milestone - Right Box (independent card) */}
-        {hasInProgress && (
-          <div className="dash-section" style={{ display: 'flex', flexDirection: 'column' }}>
-            <NextMilestone tasks={tasks} />
+        {/* Distraction Settings - Right (always visible) */}
+        <div className="dash-section" style={{
+          background: C.graphite,
+          border: `1px solid ${C.border}`,
+          borderRadius: 12,
+          padding: '20px 24px',
+        }}>
+          <div style={{
+            fontFamily: F.title,
+            fontStyle: 'italic',
+            fontSize: 17,
+            color: C.bone,
+            letterSpacing: '-0.02em',
+            marginBottom: 16,
+          }}>
+            Track distractions
           </div>
-        )}
+          <DistractionsTracker />
+        </div>
       </div>
 
-      {/* Tracking distractions */}
-      <div className="dash-section" style={{
-        background: C.graphite,
-        border: `1px solid ${C.border}`,
-        borderRadius: 12,
-        padding: '20px 24px',
-      }}>
-        <div style={{
-          fontFamily: F.title,
-          fontStyle: 'italic',
-          fontSize: 17,
-          color: C.bone,
-          letterSpacing: '-0.02em',
-          marginBottom: 16,
-        }}>
-          Track distractions
+      {/* Next Milestone — shown below when a task is in progress */}
+      {hasInProgress && (
+        <div className="dash-section">
+          <NextMilestone tasks={tasks} />
         </div>
-        <DistractionsTracker />
-      </div>
+      )}
 
       {/* This week stats */}
       <div className="dash-section">
