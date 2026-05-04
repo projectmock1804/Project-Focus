@@ -40,14 +40,16 @@ export default function App() {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
         // In Electron app, everyone goes to dashboard
-        // Admin page is only accessible via /admin URL in web browser
+        // In web, keep on landing page (user chooses to access dashboard via app download)
         setIsAuthenticated(true);
         setUserId(user.uid);
-        setIsAdmin(false);  // Never auto-set admin in Electron
+        setIsAdmin(false);  // Never auto-set admin
         localStorage.setItem('userId', user.uid);
         localStorage.removeItem('isAdmin');
-        // Always go to dashboard in Electron
-        setView({ page: 'dashboard', taskId: null });
+        // Only auto-navigate to dashboard in Electron
+        if (isElectron) {
+          setView({ page: 'dashboard', taskId: null });
+        }
       } else {
         setIsAuthenticated(false);
         setUserId(null);
@@ -56,18 +58,15 @@ export default function App() {
       setAuthLoading(false);
     });
     return () => unsubscribe();
-  }, []);
+  }, [isElectron]);
 
-  // Auto-navigate away from landing page when authenticated
+  // Auto-navigate away from landing page when authenticated (only in Electron)
   useEffect(() => {
-    if (isAuthenticated && view.page === 'landing') {
-      if (isAdmin) {
-        setView({ page: 'admin', taskId: null });
-      } else {
-        setView({ page: 'dashboard', taskId: null });
-      }
+    if (isElectron && isAuthenticated && view.page === 'landing') {
+      // In Electron, authenticated users go to dashboard
+      setView({ page: 'dashboard', taskId: null });
     }
-  }, [isAuthenticated, isAdmin]);
+  }, [isAuthenticated, isAdmin, isElectron]);
 
   function handleSignIn(uid, email) {
     // In Electron app, never set admin - always go to dashboard
