@@ -1129,11 +1129,6 @@ function DashboardContent({ tasks, onNewTask }) {
         )}
       </div>
 
-      {/* This week stats */}
-      <div className="dash-section">
-        <ThisWeekStats tasks={tasks} />
-      </div>
-
       {/* Tracking distractions */}
       <div className="dash-section" style={{
         background: C.graphite,
@@ -1152,6 +1147,11 @@ function DashboardContent({ tasks, onNewTask }) {
           Track distractions
         </div>
         <DistractionsTracker />
+      </div>
+
+      {/* This week stats */}
+      <div className="dash-section">
+        <ThisWeekStats tasks={tasks} />
       </div>
 
       {/* Quick Start */}
