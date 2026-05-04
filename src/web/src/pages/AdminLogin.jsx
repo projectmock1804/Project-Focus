@@ -11,7 +11,7 @@ export default function AdminLogin({ onAdminAccess }) {
     setError('');
 
     // 간단한 검증 - 실제로는 백엔드에서 검증
-    if (secret === 'dev-admin-2026') {
+    if (secret === 'focusmin0504') {
       onAdminAccess();
     } else {
       setError('Invalid admin secret');

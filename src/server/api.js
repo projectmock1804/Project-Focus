@@ -617,7 +617,7 @@ router.get('/distractions/today', (_req, res) => {
 // =============================================================================
 router.get('/admin/stats', async (req, res) => {
   const secret = req.headers['x-admin-secret'];
-  if (secret !== process.env.ADMIN_SECRET && secret !== 'dev-admin-2026') {
+  if (secret !== process.env.ADMIN_SECRET && secret !== 'focusmin0504') {
     // Fall back to legacy stats if no secret provided (old admin page)
     if (!secret) {
       try {
@@ -664,7 +664,7 @@ router.get('/admin/stats', async (req, res) => {
 // GET /api/admin/users - full user list
 router.get('/admin/users', async (req, res) => {
   const secret = req.headers['x-admin-secret'];
-  if (secret !== process.env.ADMIN_SECRET && secret !== 'dev-admin-2026') {
+  if (secret !== process.env.ADMIN_SECRET && secret !== 'focusmin0504') {
     return res.status(401).json({ error: 'Unauthorized' });
   }
   try {
@@ -695,7 +695,7 @@ router.get('/admin/users', async (req, res) => {
 // POST /api/admin/users/:uid/subscription - change subscription status
 router.post('/admin/users/:uid/subscription', async (req, res) => {
   const secret = req.headers['x-admin-secret'];
-  if (secret !== process.env.ADMIN_SECRET && secret !== 'dev-admin-2026') {
+  if (secret !== process.env.ADMIN_SECRET && secret !== 'focusmin0504') {
     return res.status(401).json({ error: 'Unauthorized' });
   }
   const { uid } = req.params;

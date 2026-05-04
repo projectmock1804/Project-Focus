@@ -19,10 +19,10 @@ export default function App() {
 
   // Check URL for admin page access (두 가지 방법으로 접근 가능)
   // 방법 1: /admin URL로 직접 접근
-  // 방법 2: ?admin=dev-admin-2026 파라미터로 접근
+  // 방법 2: ?admin=focusmin0504 파라미터로 접근
   const urlParams = new URLSearchParams(window.location.search);
   const adminSecret = urlParams.get('admin');
-  const isAdminUrl = window.__adminAccess || window.location.pathname === '/admin' || adminSecret === 'dev-admin-2026';
+  const isAdminUrl = window.__adminAccess || window.location.pathname === '/admin' || adminSecret === 'focusmin0504';
 
   // Start with 'auth' in Electron (skip landing page), 'landing' in browser
   const initialPage = isElectron ? 'auth' : 'landing';

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 
 const API_BASE = '/api';
-const ADMIN_SECRET = 'dev-admin-2026';
+const ADMIN_SECRET = 'focusmin0504';
 
 const headers = {
   'Content-Type': 'application/json',
