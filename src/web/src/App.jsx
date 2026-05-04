@@ -131,16 +131,17 @@ export default function App() {
       return <Admin onLogout={handleAdminLogout} />;
     }
 
-    // Not authenticated - show auth flow
-    if (!isAuthenticated) {
-      if (view.page === 'auth') {
-        return <Auth onSignIn={handleSignIn} />;
-      }
-      // Default to auth page for non-authenticated users (or landing in browser)
+    // Web version always shows landing page (unless in admin flow)
+    if (!isElectron) {
       return <Landing onEnterApp={() => setView({ page: 'auth' })} />;
     }
 
-    // Authenticated users - check for admin page access via email
+    // Electron app - requires authentication to proceed
+    if (!isAuthenticated) {
+      return <Auth onSignIn={handleSignIn} />;
+    }
+
+    // Authenticated users in Electron - show appropriate page
     if (view.page === 'admin') {
       return isAdmin ? <Admin onLogout={handleLogout} /> : <Dashboard onNavigateToTask={navigateToTask} showToast={showToast} onLogout={handleLogout} />;
     }
@@ -149,6 +150,7 @@ export default function App() {
       return <TaskDetail taskId={view.taskId} onBack={navigateToDashboard} />;
     }
 
+    // Default to dashboard in Electron
     return <Dashboard onNavigateToTask={navigateToTask} showToast={showToast} onLogout={handleLogout} />;
   };
 
