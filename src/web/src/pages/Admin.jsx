@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 
 const API_BASE = '/api';
-const ADMIN_SECRET = 'focusmin0504';
 
-const headers = {
+// Get admin secret from sessionStorage (set after login)
+const getHeaders = () => ({
   'Content-Type': 'application/json',
-  'x-admin-secret': ADMIN_SECRET,
-};
+  'x-admin-secret': sessionStorage.getItem('adminSecret') || '',
+});
 
 export default function Admin({ onLogout }) {
   const [stats, setStats] = useState(null);
@@ -24,8 +24,8 @@ export default function Admin({ onLogout }) {
     setLoading(true);
     try {
       const [statsRes, usersRes] = await Promise.all([
-        fetch(`${API_BASE}/admin/stats`, { headers }),
-        fetch(`${API_BASE}/admin/users`, { headers }),
+        fetch(`${API_BASE}/admin/stats`, { headers: getHeaders() }),
+        fetch(`${API_BASE}/admin/users`, { headers: getHeaders() }),
       ]);
       if (statsRes.ok) setStats(await statsRes.json());
       if (usersRes.ok) {
@@ -43,7 +43,7 @@ export default function Admin({ onLogout }) {
     try {
       const res = await fetch(`${API_BASE}/admin/users/${uid}/subscription`, {
         method: 'POST',
-        headers,
+        headers: getHeaders(),
         body: JSON.stringify({ status, monthsToAdd }),
       });
       if (res.ok) {
@@ -76,19 +76,34 @@ export default function Admin({ onLogout }) {
 
   function StatusBadge({ status, freeTrialEndsAt, paidUntil }) {
     const now = new Date();
-    let label, color, bg;
+    let label, color, bg, endDate;
     if (status === 'paid' && paidUntil && new Date(paidUntil) > now) {
-      label = 'Paid'; color = C.green; bg = 'rgba(76,175,80,0.1)';
+      const days = Math.ceil((new Date(paidUntil) - now) / (1000 * 60 * 60 * 24));
+      label = `Paid (${days}d)`;
+      color = C.green;
+      bg = 'rgba(76,175,80,0.1)';
+      endDate = new Date(paidUntil).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
     } else if (freeTrialEndsAt && new Date(freeTrialEndsAt) > now) {
       const days = Math.ceil((new Date(freeTrialEndsAt) - now) / (1000 * 60 * 60 * 24));
-      label = `Trial (${days}d)`; color = C.blue; bg = 'rgba(102,126,234,0.1)';
+      label = `Trial (${days}d)`;
+      color = C.blue;
+      bg = 'rgba(102,126,234,0.1)';
+      endDate = new Date(freeTrialEndsAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
     } else {
-      label = 'Expired'; color = C.red; bg = 'rgba(239,83,80,0.1)';
+      label = 'Expired';
+      color = C.red;
+      bg = 'rgba(239,83,80,0.1)';
+      endDate = (paidUntil || freeTrialEndsAt) ? new Date(paidUntil || freeTrialEndsAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '—';
     }
     return (
-      <span style={{ padding: '3px 8px', borderRadius: 4, fontSize: 12, fontWeight: 600, color, background: bg, border: `1px solid ${color}40` }}>
-        {label}
-      </span>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+        <span style={{ padding: '3px 8px', borderRadius: 4, fontSize: 12, fontWeight: 600, color, background: bg, border: `1px solid ${color}40`, display: 'inline-block', width: 'fit-content' }}>
+          {label}
+        </span>
+        <span style={{ fontSize: 11, color: C.muted }}>
+          Until {endDate}
+        </span>
+      </div>
     );
   }
 

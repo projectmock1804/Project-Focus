@@ -10,11 +10,24 @@ export default function AdminLogin({ onAdminAccess }) {
     setLoading(true);
     setError('');
 
-    // 간단한 검증 - 실제로는 백엔드에서 검증
-    if (secret === 'focusmin0504') {
-      onAdminAccess();
-    } else {
-      setError('Invalid admin secret');
+    try {
+      // Verify secret by calling admin API (backend will validate)
+      const res = await fetch('/api/admin/stats', {
+        headers: { 'x-admin-secret': secret }
+      });
+
+      if (res.ok) {
+        // Secret is valid - store it for future requests
+        sessionStorage.setItem('adminSecret', secret);
+        onAdminAccess();
+      } else if (res.status === 401) {
+        setError('Invalid admin secret');
+      } else {
+        setError('Server error - please try again');
+      }
+    } catch (err) {
+      setError('Connection error - please try again');
+      console.error('Admin login error:', err);
     }
 
     setLoading(false);

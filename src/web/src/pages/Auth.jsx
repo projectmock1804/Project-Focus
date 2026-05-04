@@ -74,6 +74,8 @@ export default function Auth({ onSignIn }) {
         await syncUser(uid, userEmail, displayName || email.split('@')[0]);
       } else {
         userCredential = await signInWithEmailAndPassword(auth, email, password);
+        // Also sync user on login (in case subscription status changed)
+        await syncUser(userCredential.user.uid, userCredential.user.email, userCredential.user.displayName || email.split('@')[0]);
       }
 
       const { uid, email: userEmail } = userCredential.user;

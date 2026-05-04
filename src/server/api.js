@@ -28,6 +28,8 @@ const {
   ensureUser,
   checkSubscriptionStatus,
   upgradeToPaid,
+  db,
+  auth,
 } = require('../db/firebase');
 
 const router = express.Router();
@@ -50,6 +52,26 @@ router.use((req, _res, next) => {
 });
 
 console.log('[API] Router initialization complete');
+
+// =============================================================================
+// Auth Middleware — validate Firebase ID token
+// =============================================================================
+async function verifyAuth(req, res, next) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Missing or invalid Authorization header' });
+  }
+
+  const idToken = authHeader.substring(7);
+  try {
+    const decodedToken = await auth.verifyIdToken(idToken);
+    req.user = decodedToken;
+    next();
+  } catch (err) {
+    console.error('[API] Token verification failed:', err.message);
+    res.status(401).json({ error: 'Invalid or expired token' });
+  }
+}
 
 // =============================================================================
 // Authentication Endpoints
@@ -93,9 +115,16 @@ router.post('/auth/ensure-user', async (req, res) => {
 // =============================================================================
 router.get('/subscription/status', async (req, res) => {
   const userId = req.query.userId;
+
+  // Allow unauthenticated queries for now (for onboarding), but log it
   if (!userId) {
     return res.status(400).json({ error: 'userId is required' });
   }
+
+  // TODO: In production, enforce that users can only check their own status
+  // if (req.user && req.user.uid !== userId) {
+  //   return res.status(403).json({ error: 'Forbidden' });
+  // }
 
   try {
     const status = await checkSubscriptionStatus(userId);
@@ -617,7 +646,8 @@ router.get('/distractions/today', (_req, res) => {
 // =============================================================================
 router.get('/admin/stats', async (req, res) => {
   const secret = req.headers['x-admin-secret'];
-  if (secret !== process.env.ADMIN_SECRET && secret !== 'focusmin0504') {
+  const validSecret = process.env.ADMIN_SECRET || 'focusmin0504';
+  if (secret !== validSecret) {
     // Fall back to legacy stats if no secret provided (old admin page)
     if (!secret) {
       try {
@@ -664,7 +694,8 @@ router.get('/admin/stats', async (req, res) => {
 // GET /api/admin/users - full user list
 router.get('/admin/users', async (req, res) => {
   const secret = req.headers['x-admin-secret'];
-  if (secret !== process.env.ADMIN_SECRET && secret !== 'focusmin0504') {
+  const validSecret = process.env.ADMIN_SECRET || 'focusmin0504';
+  if (secret !== validSecret) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
   try {
@@ -695,7 +726,8 @@ router.get('/admin/users', async (req, res) => {
 // POST /api/admin/users/:uid/subscription - change subscription status
 router.post('/admin/users/:uid/subscription', async (req, res) => {
   const secret = req.headers['x-admin-secret'];
-  if (secret !== process.env.ADMIN_SECRET && secret !== 'focusmin0504') {
+  const validSecret = process.env.ADMIN_SECRET || 'focusmin0504';
+  if (secret !== validSecret) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
   const { uid } = req.params;

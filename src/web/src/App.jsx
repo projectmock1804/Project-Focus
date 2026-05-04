@@ -33,7 +33,24 @@ export default function App() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [authLoading, setAuthLoading] = useState(true);
   const [adminAuthenticated, setAdminAuthenticated] = useState(false);
+  const [subscriptionStatus, setSubscriptionStatus] = useState('free');
+  const [freeTrialEndsAt, setFreeTrialEndsAt] = useState(null);
+  const [paidUntil, setPaidUntil] = useState(null);
   const { toasts, showToast } = useToast();
+
+  // Fetch subscription status when userId changes
+  useEffect(() => {
+    if (userId && isAuthenticated) {
+      fetch(`/api/subscription/status?userId=${encodeURIComponent(userId)}`)
+        .then(res => res.json())
+        .then(data => {
+          setSubscriptionStatus(data.status || 'free');
+          setFreeTrialEndsAt(data.expiresAt && data.status === 'free_trial' ? data.expiresAt : null);
+          setPaidUntil(data.expiresAt && data.status === 'paid' ? data.expiresAt : null);
+        })
+        .catch(err => console.error('Failed to fetch subscription status:', err));
+    }
+  }, [userId, isAuthenticated]);
 
   // Firebase auth state listener — persists sessions across page refreshes
   useEffect(() => {
@@ -54,6 +71,9 @@ export default function App() {
         setIsAuthenticated(false);
         setUserId(null);
         setIsAdmin(false);
+        setSubscriptionStatus('free');
+        setFreeTrialEndsAt(null);
+        setPaidUntil(null);
       }
       setAuthLoading(false);
     });
@@ -143,7 +163,7 @@ export default function App() {
 
     // Authenticated users in Electron - show appropriate page
     if (view.page === 'admin') {
-      return isAdmin ? <Admin onLogout={handleLogout} /> : <Dashboard onNavigateToTask={navigateToTask} showToast={showToast} onLogout={handleLogout} />;
+      return isAdmin ? <Admin onLogout={handleLogout} /> : <Dashboard onNavigateToTask={navigateToTask} showToast={showToast} onLogout={handleLogout} subscriptionStatus={subscriptionStatus} freeTrialEndsAt={freeTrialEndsAt} paidUntil={paidUntil} />;
     }
 
     if (view.page === 'task' && view.taskId) {
@@ -151,7 +171,7 @@ export default function App() {
     }
 
     // Default to dashboard in Electron
-    return <Dashboard onNavigateToTask={navigateToTask} showToast={showToast} onLogout={handleLogout} />;
+    return <Dashboard onNavigateToTask={navigateToTask} showToast={showToast} onLogout={handleLogout} subscriptionStatus={subscriptionStatus} freeTrialEndsAt={freeTrialEndsAt} paidUntil={paidUntil} />;
   };
 
   return (

@@ -224,7 +224,7 @@ async function getInspirationalQuote() {
     }
 
     // Fetch new quote from API
-    const res = await fetch('http://localhost:3000/api/quote', { method: 'GET' });
+    const res = await fetch('/api/quote', { method: 'GET' });
     if (res.ok) {
       const data = await res.json();
       const quoteData = {
@@ -2302,7 +2302,7 @@ function DetailStat({ label, value, color }) {
 // =============================================================================
 // Main Dashboard
 // =============================================================================
-export default function Dashboard({ onNavigateToTask, showToast = () => {}, onLogout = () => {} }) {
+export default function Dashboard({ onNavigateToTask, showToast = () => {}, onLogout = () => {}, subscriptionStatus = 'free', freeTrialEndsAt = null, paidUntil = null }) {
   const [tasks, setTasks] = useState([]);
   const [selectedTask, setSelectedTask] = useState(null);
   const [sessionTotals, setSessionTotals] = useState(null);
@@ -2318,7 +2318,7 @@ export default function Dashboard({ onNavigateToTask, showToast = () => {}, onLo
   const [userName, setUserName] = useState(() => {
     return localStorage.getItem('projectFocusUserName') || null;
   });
-  const userId = 'default';
+  const userId = localStorage.getItem('userId') || 'default';
 
   const fetchTasks = useCallback(async () => {
     try {
@@ -2511,12 +2511,15 @@ export default function Dashboard({ onNavigateToTask, showToast = () => {}, onLo
     setSelectedTask(task);
     setSessionTotals(null);
     fetchTaskProgress(task.id);
-    // Auto-start tracking when task is selected
-    fetch('http://127.0.0.1:3001/set-task', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ taskId: task.id }),
-    }).catch(() => {});
+    // Auto-start tracking when task is selected (optional, Electron only)
+    // Try to communicate with local Electron agent if available
+    if (window.electron) {
+      fetch('http://127.0.0.1:3001/set-task', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ taskId: task.id }),
+      }).catch(() => {}); // Silently fail if not available
+    }
   }
 
   function handleViewChange(viewId) {
@@ -2576,6 +2579,72 @@ export default function Dashboard({ onNavigateToTask, showToast = () => {}, onLo
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {/* Hero dashboard header */}
         <Hero tasks={tasks} sessionTotals={sessionTotals} userName={userName || 'there'} />
+
+        {/* Subscription status banner */}
+        {(() => {
+          const now = new Date();
+          const trialEnd = freeTrialEndsAt ? new Date(freeTrialEndsAt) : null;
+          const paidEnd = paidUntil ? new Date(paidUntil) : null;
+
+          let bannerConfig = null;
+
+          if (subscriptionStatus === 'paid' && paidEnd && paidEnd > now) {
+            const daysLeft = Math.ceil((paidEnd - now) / (1000 * 60 * 60 * 24));
+            bannerConfig = {
+              bg: 'rgba(107,142,90,0.15)',
+              border: '1px solid rgba(107,142,90,0.3)',
+              color: '#6B8E5A',
+              text: `✓ Premium active · expires in ${daysLeft} day${daysLeft === 1 ? '' : 's'}`
+            };
+          } else if (trialEnd && trialEnd > now) {
+            const daysLeft = Math.ceil((trialEnd - now) / (1000 * 60 * 60 * 24));
+            bannerConfig = {
+              bg: 'rgba(232,107,58,0.12)',
+              border: '1px solid rgba(232,107,58,0.25)',
+              color: '#E86B3A',
+              text: `⏱ Free trial · ${daysLeft} day${daysLeft === 1 ? '' : 's'} remaining`
+            };
+          } else {
+            bannerConfig = {
+              bg: 'rgba(239,83,80,0.12)',
+              border: '1px solid rgba(239,83,80,0.25)',
+              color: '#ef5350',
+              text: '⚠ Trial expired · upgrade to continue'
+            };
+          }
+
+          return (
+            <div style={{
+              padding: '10px 20px', flexShrink: 0,
+              background: bannerConfig.bg,
+              border: `${bannerConfig.border}`,
+              borderTop: 'none',
+              borderBottom: bannerConfig.border,
+              fontFamily: F.ui, fontSize: 13, color: bannerConfig.color,
+              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+            }}>
+              <span>{bannerConfig.text}</span>
+              {subscriptionStatus !== 'paid' && (
+                <button
+                  onClick={() => alert('Upgrade to premium coming soon!')}
+                  style={{
+                    background: bannerConfig.color,
+                    color: C.ink,
+                    border: 'none',
+                    borderRadius: 5,
+                    padding: '5px 12px',
+                    fontSize: 12,
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    fontFamily: F.ui,
+                  }}
+                >
+                  Upgrade
+                </button>
+              )}
+            </div>
+          );
+        })()}
 
         {/* Error banner */}
         {error && (
