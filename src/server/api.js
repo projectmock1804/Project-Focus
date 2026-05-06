@@ -701,7 +701,7 @@ router.get('/admin/stats', async (req, res) => {
 // GET /api/admin/users - full user list
 router.get('/admin/users', async (req, res) => {
   const secret = req.headers['x-admin-secret'];
-  const validSecret = process.env.ADMIN_SECRET || 'focusmin0504';
+  const validSecret = process.env.ADMIN_SECRET || DAILY_SECRET;
   if (secret !== validSecret) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
@@ -733,7 +733,7 @@ router.get('/admin/users', async (req, res) => {
 // POST /api/admin/users/:uid/subscription - change subscription status
 router.post('/admin/users/:uid/subscription', async (req, res) => {
   const secret = req.headers['x-admin-secret'];
-  const validSecret = process.env.ADMIN_SECRET || 'focusmin0504';
+  const validSecret = process.env.ADMIN_SECRET || DAILY_SECRET;
   if (secret !== validSecret) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
