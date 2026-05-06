@@ -59,7 +59,7 @@
     "mac": {
       "target": [
         {
-          "target": "dmg",
+          "target": "zip",
           "arch": [
             "x64",
             "arm64"
@@ -68,26 +68,6 @@
       ],
       "icon": "src/desktop/icon.png",
       "category": "public.app-category.productivity"
-    },
-    "dmg": {
-      "contents": [
-        {
-          "x": 110,
-          "y": 150,
-          "type": "file"
-        },
-        {
-          "x": 240,
-          "y": 150,
-          "type": "link",
-          "path": "/Applications"
-        }
-      ],
-      "window": {
-        "width": 500,
-        "height": 500
-      },
-      "artifactName": "Project-Focus-${version}.dmg"
     },
     "nsis": {
       "oneClick": false,
