@@ -48,7 +48,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: mac-installer
-          path: dist-electron/Project-Focus-*.dmg
+          path: dist-electron/Project-Focus-*.zip
 
   create-release:
     needs: [build-windows, build-mac]
@@ -79,11 +79,11 @@ jobs:
 
             ### 📥 Download
             - 🪟 **Windows**: Project-Focus-Setup.exe
-            - 🍎 **macOS**: Project-Focus-*.dmg
+            - 🍎 **macOS**: Project-Focus-*.zip
 
             ### 📦 Installation
             **Windows**: Double-click .exe to install
-            **macOS**: Open .dmg and drag app to Applications folder
+            **macOS**: Unzip the file and drag the app to Applications folder
 
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
