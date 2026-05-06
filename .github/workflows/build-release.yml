@@ -48,7 +48,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: mac-installer
-          path: dist-electron/Project-Focus-*.zip
+          path: dist-electron/Project-Focus-Setup.zip
 
   create-release:
     needs: [build-windows, build-mac]

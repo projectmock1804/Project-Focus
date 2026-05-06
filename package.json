@@ -67,7 +67,8 @@
         }
       ],
       "icon": "src/desktop/icon.png",
-      "category": "public.app-category.productivity"
+      "category": "public.app-category.productivity",
+      "artifactName": "Project-Focus-Setup.zip"
     },
     "nsis": {
       "oneClick": false,

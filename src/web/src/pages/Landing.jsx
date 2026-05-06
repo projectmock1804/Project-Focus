@@ -317,7 +317,7 @@ export default function Landing({ onEnterApp }) {
             </svg>
             <span style={{ fontSize: 16, fontWeight: 600, fontFamily: F.title, fontStyle: 'italic' }}>focus.</span>
           </div>
-          <a href="https://github.com/projectmock1804/Project-Focus/releases/latest/download/Project-Focus-Setup.exe" style={{
+          <a href="https://github.com/projectmock1804/Project-Focus/releases/latest" style={{
             fontFamily: F.ui,
             fontSize: 13,
             padding: '10px 20px',
@@ -344,7 +344,9 @@ export default function Landing({ onEnterApp }) {
               e.currentTarget.style.transform = 'translateY(0)';
               e.currentTarget.style.boxShadow = 'none';
             }
-          }}>
+          }}
+          target="_blank"
+          rel="noopener noreferrer">
             <span>⬇</span> Download
           </a>
         </div>
@@ -460,6 +462,37 @@ export default function Landing({ onEnterApp }) {
               }
             }}>
               <span>⬇</span> Download for Windows
+            </a>
+            <a href="https://github.com/projectmock1804/Project-Focus/releases/latest/download/Project-Focus-Setup.zip" style={{
+              fontFamily: F.ui,
+              fontSize: 15,
+              padding: '16px 36px',
+              background: C.moss,
+              border: 'none',
+              borderRadius: 6,
+              color: C.bone,
+              cursor: 'pointer',
+              fontWeight: 600,
+              transition: 'all 0.2s',
+              boxShadow: `0 8px 24px rgba(136, 176, 75, 0.3)`,
+              textDecoration: 'none',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 8,
+            }}
+            onMouseEnter={(e) => {
+              if (e.currentTarget) {
+                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.boxShadow = `0 12px 32px rgba(136, 176, 75, 0.4)`;
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (e.currentTarget) {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = `0 8px 24px rgba(136, 176, 75, 0.3)`;
+              }
+            }}>
+              <span>⬇</span> Download for Mac
             </a>
           </div>
 
