@@ -43,6 +43,11 @@
       {
         "from": ".env",
         "to": ".env"
+      },
+      {
+        "from": "KOR Video",
+        "to": "app/KOR Video",
+        "filter": ["**/*.mp4", "**/*.webm", "**/*.mov"]
       }
     ],
     "win": {

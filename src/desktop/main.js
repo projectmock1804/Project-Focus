@@ -314,7 +314,11 @@ function showDistractionPopup({ distractedMinutes, windowTitle }) {
   const mins = Math.round(distractedMinutes);
   const site = detectSiteName(windowTitle, false);
 
-  fetch('http://localhost:3000/api/distractions/log', {
+  const API_BASE = IS_PACKAGED
+    ? 'https://project-focus-mo3i.onrender.com'
+    : 'http://localhost:3000';
+
+  fetch(`${API_BASE}/api/distractions/log`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ app: site, duration: mins }),
