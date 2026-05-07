@@ -69,6 +69,12 @@ jobs:
         with:
           name: mac-installer
           path: ./release
+      - name: Debug - List release directory
+        run: |
+          echo "Contents of ./release:"
+          ls -lah ./release || echo "Directory not found"
+          echo "Total files:"
+          find ./release -type f | wc -l || echo "No files found"
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
