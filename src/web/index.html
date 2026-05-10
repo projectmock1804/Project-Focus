@@ -15,8 +15,8 @@
   <body>
     <div id="root"></div>
     <script>
-      // 어드민 페이지 접근 감지
-      if (window.location.pathname === '/admin' || window.location.search.includes('admin=focusmin0504')) {
+      // 어드민 페이지 접근 감지 — /admin URL로만 접근 가능
+      if (window.location.pathname === '/admin') {
         window.__adminAccess = true;
       }
     </script>

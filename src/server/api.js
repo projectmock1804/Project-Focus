@@ -6,6 +6,7 @@ delete require.cache[require.resolve('../llm/estimator')];
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const rateLimit = require('express-rate-limit');
 const path = require('path');
 const { parseTask, estimateProgress } = require('../llm/estimator');
 const {
@@ -45,12 +46,11 @@ const distractionsLog = {};
 
 console.log('[API] Router initialization starting');
 
-// Generate daily admin secret (focusMMDD)
-const today = new Date();
-const month = String(today.getMonth() + 1).padStart(2, '0');
-const date = String(today.getDate()).padStart(2, '0');
-const DAILY_SECRET = `focus${month}${date}`;
-console.log(`[API] Today's admin secret: ${DAILY_SECRET}`);
+// Admin secret — must be set via environment variable (min 32 chars, cryptographically random)
+const ADMIN_SECRET = process.env.ADMIN_SECRET;
+if (!ADMIN_SECRET || ADMIN_SECRET.length < 32) {
+  console.error('[API] CRITICAL: ADMIN_SECRET env var is missing or too short. Admin endpoints will be inaccessible.');
+}
 
 // Request logger
 router.use((req, _res, next) => {
@@ -87,52 +87,39 @@ async function verifyAuth(req, res, next) {
 // =============================================================================
 
 // Called after email/password signup (Firebase Auth user already created client-side)
-router.post('/auth/signup', async (req, res) => {
-  const { uid, email, displayName } = req.body;
-  if (!uid || !email) {
-    return res.status(400).json({ error: 'uid and email are required' });
-  }
+// Requires valid Firebase ID token — uid is taken from verified token, not request body
+router.post('/auth/signup', verifyAuth, async (req, res) => {
+  const { displayName } = req.body;
+  const { uid, email } = req.user;
   try {
     await signUpUser(uid, email, displayName || email.split('@')[0]);
     res.json({ success: true, userId: uid });
   } catch (err) {
     console.error('[API] /auth/signup error:', err);
-    res.status(400).json({ error: err.message });
+    res.status(400).json({ error: 'Failed to complete signup' });
   }
 });
 
 // Called after any sign-in (email/password or Google) — upserts Firestore user doc
-router.post('/auth/ensure-user', async (req, res) => {
-  const { uid, email, displayName } = req.body;
-  if (!uid || !email) {
-    return res.status(400).json({ error: 'uid and email are required' });
-  }
+// Requires valid Firebase ID token — uid is taken from verified token, not request body
+router.post('/auth/ensure-user', verifyAuth, async (req, res) => {
+  const { displayName } = req.body;
+  const { uid, email } = req.user;
   try {
     await ensureUser(uid, email, displayName || email.split('@')[0]);
     res.json({ success: true, userId: uid });
   } catch (err) {
     console.error('[API] /auth/ensure-user error:', err);
-    res.status(400).json({ error: err.message });
+    res.status(400).json({ error: 'Failed to sync user' });
   }
 });
 
 // =============================================================================
 // GET /api/subscription/status
-// Check user's subscription status (free trial / paid / expired)
+// Check user's own subscription status — requires auth
 // =============================================================================
-router.get('/subscription/status', async (req, res) => {
-  const userId = req.query.userId;
-
-  // Allow unauthenticated queries for now (for onboarding), but log it
-  if (!userId) {
-    return res.status(400).json({ error: 'userId is required' });
-  }
-
-  // TODO: In production, enforce that users can only check their own status
-  // if (req.user && req.user.uid !== userId) {
-  //   return res.status(403).json({ error: 'Forbidden' });
-  // }
-
+router.get('/subscription/status', verifyAuth, async (req, res) => {
+  const userId = req.user.uid;
   try {
     const status = await checkSubscriptionStatus(userId);
     res.json(status);
@@ -144,13 +131,11 @@ router.get('/subscription/status', async (req, res) => {
 
 // =============================================================================
 // POST /api/subscription/upgrade
-// Upgrade user to paid plan (called after successful Toss payment)
+// Upgrade authenticated user to paid plan (called after successful payment verification)
 // =============================================================================
-router.post('/subscription/upgrade', async (req, res) => {
-  const { userId, monthsToAdd } = req.body;
-  if (!userId) {
-    return res.status(400).json({ error: 'userId is required' });
-  }
+router.post('/subscription/upgrade', verifyAuth, async (req, res) => {
+  const userId = req.user.uid; // Always use authenticated user's UID — never trust body
+  const { monthsToAdd } = req.body;
 
   try {
     const result = await upgradeToPaid(userId, monthsToAdd || 1);
@@ -165,8 +150,9 @@ router.post('/subscription/upgrade', async (req, res) => {
 // POST /api/task/parse
 // Accepts a Telegram-style message text, runs Claude analysis, saves to Sheets
 // =============================================================================
-router.post('/task/parse', async (req, res) => {
-  const { text, userId } = req.body;
+router.post('/task/parse', verifyAuth, async (req, res) => {
+  const { text } = req.body;
+  const userId = req.user.uid;
 
   if (!text || typeof text !== 'string' || text.trim().length === 0) {
     return res.status(400).json({ error: 'text field is required' });
@@ -176,11 +162,9 @@ router.post('/task/parse', async (req, res) => {
     return res.status(400).json({ error: 'text must be less than 2000 characters' });
   }
 
-  const resolvedUserId = String(userId || 'default').slice(0, 100);
-
   try {
     const parsed = await parseTask(text.trim());
-    const taskId = await createTask(parsed, resolvedUserId);
+    const taskId = await createTask(parsed, userId);
 
     return res.json({
       taskId,
@@ -188,7 +172,7 @@ router.post('/task/parse', async (req, res) => {
     });
   } catch (err) {
     console.error('[API] /task/parse error:', err);
-    return res.status(500).json({ error: err.message });
+    return res.status(500).json({ error: 'Failed to parse task' });
   }
 });
 
@@ -196,14 +180,13 @@ router.post('/task/parse', async (req, res) => {
 // POST /api/task/create-multi-stage
 // Create a raw task request from multi-stage form data + create placeholder task
 // =============================================================================
-router.post('/task/create-multi-stage', async (req, res) => {
-  const { formData, userId } = req.body;
+router.post('/task/create-multi-stage', verifyAuth, async (req, res) => {
+  const { formData } = req.body;
+  const resolvedUserId = req.user.uid;
 
   if (!formData || typeof formData !== 'object') {
     return res.status(400).json({ error: 'formData object is required' });
   }
-
-  const resolvedUserId = userId || 'default';
 
   try {
     console.log('[API] /task/create-multi-stage:', formData.title);
@@ -231,7 +214,7 @@ router.post('/task/create-multi-stage', async (req, res) => {
     });
   } catch (err) {
     console.error('[API] /task/create-multi-stage error:', err);
-    return res.status(500).json({ error: err.message });
+    return res.status(500).json({ error: 'Failed to create task' });
   }
 });
 
@@ -240,8 +223,8 @@ router.post('/task/create-multi-stage', async (req, res) => {
 // Returns all tasks for the given userId (not just today)
 // Excludes deleted tasks by default (use ?includedeleted=true to include)
 // =============================================================================
-router.get('/tasks', async (req, res) => {
-  const userId = req.query.userId || 'default';
+router.get('/tasks', verifyAuth, async (req, res) => {
+  const userId = req.user.uid;
   const includeDeleted = req.query.includedeleted === 'true';
 
   try {
@@ -250,7 +233,7 @@ router.get('/tasks', async (req, res) => {
     return res.json({ tasks: filtered });
   } catch (err) {
     console.error('[API] /tasks error:', err);
-    return res.status(500).json({ error: err.message });
+    return res.status(500).json({ error: 'Failed to fetch tasks' });
   }
 });
 
@@ -259,8 +242,8 @@ router.get('/tasks', async (req, res) => {
 // Returns all tasks with a deadline matching today for the given userId
 // Excludes deleted tasks
 // =============================================================================
-router.get('/tasks/today', async (req, res) => {
-  const userId = req.query.userId || 'default';
+router.get('/tasks/today', verifyAuth, async (req, res) => {
+  const userId = req.user.uid;
 
   try {
     const tasks = await getTodayTasks(userId);
@@ -268,7 +251,7 @@ router.get('/tasks/today', async (req, res) => {
     return res.json({ tasks: filtered });
   } catch (err) {
     console.error('[API] /tasks/today error:', err);
-    return res.status(500).json({ error: err.message });
+    return res.status(500).json({ error: 'Failed to fetch tasks' });
   }
 });
 
@@ -287,7 +270,7 @@ router.get('/task/:id', async (req, res) => {
     return res.json({ task });
   } catch (err) {
     console.error(`[API] /task/${id} error:`, err);
-    return res.status(500).json({ error: err.message });
+    return res.status(500).json({ error: 'Failed to fetch task' });
   }
 });
 
@@ -340,7 +323,7 @@ router.put('/task/:id/update', async (req, res) => {
     return res.json({ taskId: id, task: updated });
   } catch (err) {
     console.error(`[API] /task/${id}/update error:`, err);
-    return res.status(500).json({ error: err.message });
+    return res.status(500).json({ error: 'Failed to update task' });
   }
 });
 
@@ -369,7 +352,7 @@ router.post('/task/:id/delete', async (req, res) => {
     return res.json({ ok: true, taskId: id });
   } catch (err) {
     console.error(`[API] /task/${id}/delete error:`, err);
-    return res.status(500).json({ error: err.message });
+    return res.status(500).json({ error: 'Failed to delete task' });
   }
 });
 
@@ -403,7 +386,7 @@ router.post('/task/:id/restore', async (req, res) => {
     return res.json({ ok: true, taskId: id, status: previousStatus });
   } catch (err) {
     console.error(`[API] /task/${id}/restore error:`, err);
-    return res.status(500).json({ error: err.message });
+    return res.status(500).json({ error: 'Failed to restore task' });
   }
 });
 
@@ -438,7 +421,7 @@ router.get('/task/:id/progress', async (req, res) => {
     });
   } catch (err) {
     console.error(`[API] /task/${id}/progress error:`, err);
-    return res.status(500).json({ error: err.message });
+    return res.status(500).json({ error: 'Failed to fetch progress' });
   }
 });
 
@@ -495,7 +478,7 @@ router.post('/session/log', async (req, res) => {
     });
   } catch (err) {
     console.error('[API] /session/log error:', err);
-    return res.status(500).json({ error: err.message });
+    return res.status(500).json({ error: 'Failed to log session' });
   }
 });
 
@@ -651,22 +634,21 @@ router.get('/distractions/today', (_req, res) => {
 // =============================================================================
 // Admin endpoints
 // =============================================================================
-router.get('/admin/stats', async (req, res) => {
-  const secret = req.headers['x-admin-secret'];
-  const validSecret = process.env.ADMIN_SECRET || DAILY_SECRET;
-  if (secret !== validSecret) {
-    // Fall back to legacy stats if no secret provided (old admin page)
-    if (!secret) {
-      try {
-        const stats = await getAdminStats();
-        return res.json(stats);
-      } catch (err) {
-        console.error('[API] /admin/stats error:', err);
-        return res.status(500).json({ error: err.message });
-      }
-    }
-    return res.status(401).json({ error: 'Unauthorized' });
+function verifyAdminSecret(req, res) {
+  if (!ADMIN_SECRET) {
+    res.status(503).json({ error: 'Admin endpoint not configured' });
+    return false;
   }
+  const secret = req.headers['x-admin-secret'];
+  if (!secret || secret !== ADMIN_SECRET) {
+    res.status(401).json({ error: 'Unauthorized' });
+    return false;
+  }
+  return true;
+}
+
+router.get('/admin/stats', async (req, res) => {
+  if (!verifyAdminSecret(req, res)) return;
   try {
     const { db } = require('../db/firebase');
     const usersSnap = await db.collection('users').get();
@@ -694,17 +676,13 @@ router.get('/admin/stats', async (req, res) => {
     });
   } catch (err) {
     console.error('[API] /admin/stats error:', err);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
 // GET /api/admin/users - full user list
 router.get('/admin/users', async (req, res) => {
-  const secret = req.headers['x-admin-secret'];
-  const validSecret = process.env.ADMIN_SECRET || DAILY_SECRET;
-  if (secret !== validSecret) {
-    return res.status(401).json({ error: 'Unauthorized' });
-  }
+  if (!verifyAdminSecret(req, res)) return;
   try {
     const { db } = require('../db/firebase');
     const snap = await db.collection('users').get();
@@ -726,17 +704,13 @@ router.get('/admin/users', async (req, res) => {
     res.json({ users, total: users.length });
   } catch (err) {
     console.error('[API] /admin/users error:', err);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
 // POST /api/admin/users/:uid/subscription - change subscription status
 router.post('/admin/users/:uid/subscription', async (req, res) => {
-  const secret = req.headers['x-admin-secret'];
-  const validSecret = process.env.ADMIN_SECRET || DAILY_SECRET;
-  if (secret !== validSecret) {
-    return res.status(401).json({ error: 'Unauthorized' });
-  }
+  if (!verifyAdminSecret(req, res)) return;
   const { uid } = req.params;
   const { status, monthsToAdd } = req.body;
   try {
@@ -768,17 +742,18 @@ router.post('/admin/users/:uid/subscription', async (req, res) => {
     }
   } catch (err) {
     console.error('[API] /admin/users/:uid/subscription error:', err);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-router.get('/admin/complaints', async (_req, res) => {
+router.get('/admin/complaints', async (req, res) => {
+  if (!verifyAdminSecret(req, res)) return;
   try {
     const complaints = await getComplaints();
     res.json({ complaints });
   } catch (err) {
     console.error('[API] /admin/complaints error:', err);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -795,7 +770,7 @@ router.post('/complaint', async (req, res) => {
     res.json({ ok: true, complaintId });
   } catch (err) {
     console.error('[API] /complaint error:', err);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Failed to submit complaint' });
   }
 });
 
@@ -815,11 +790,36 @@ async function createApp() {
   // Initialize Firebase indexes
   await ensureIndexes();
 
+  // Rate limiting — global
+  const globalLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 200,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { error: 'Too many requests, please try again later' },
+  });
+
+  // Stricter rate limit for AI-powered endpoints (cost protection)
+  const aiLimiter = rateLimit({
+    windowMs: 60 * 1000, // 1 minute
+    max: 10,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { error: 'Too many AI requests, please wait a moment' },
+  });
+
+  app.use('/api', globalLimiter);
+  app.use('/api/task/parse', aiLimiter);
+
   // Middleware ordering is important
-  app.use(express.json({ limit: '10mb' }));
+  app.use(express.json({ limit: '1mb' }));
   app.use(cors({
-    origin: '*',
-    credentials: false,
+    origin: [
+      'https://project-focus-mo3i.onrender.com',
+      'http://localhost:5173',
+      'http://localhost:3000',
+    ],
+    credentials: true,
   }));
 
   // Security headers
@@ -827,6 +827,14 @@ async function createApp() {
     res.setHeader('X-Content-Type-Options', 'nosniff');
     res.setHeader('X-Frame-Options', 'DENY');
     res.setHeader('X-XSS-Protection', '1; mode=block');
+    res.setHeader('Content-Security-Policy',
+      "default-src 'self'; " +
+      "script-src 'self' 'unsafe-inline'; " +
+      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
+      "font-src 'self' https://fonts.gstatic.com; " +
+      "img-src 'self' data: https:; " +
+      "connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://firestore.googleapis.com https://identitytoolkit.googleapis.com;"
+    );
     next();
   });
 

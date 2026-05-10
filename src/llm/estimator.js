@@ -57,9 +57,8 @@ async function parseTask(taskText, referenceDate = new Date()) {
     throw new Error('taskText must be a non-empty string');
   }
 
-  console.log('[estimator] GEMINI_API_KEY:', GEMINI_API_KEY?.slice(0, 10) + '...');
   console.log('[estimator] MODEL:', MODEL);
-  console.log('[estimator] GEMINI_API_URL:', GEMINI_API_URL);
+  console.log('[estimator] GEMINI_API_KEY:', GEMINI_API_KEY ? 'configured' : 'MISSING');
 
   const todayStr = referenceDate.toISOString().split('T')[0];
   const userMessage = `Today's date: ${todayStr}\nTask: ${taskText.trim()}`;

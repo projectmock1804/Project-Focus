@@ -17,12 +17,8 @@ export default function App() {
     navigator.userAgent.includes('Electron')
   );
 
-  // Check URL for admin page access (두 가지 방법으로 접근 가능)
-  // 방법 1: /admin URL로 직접 접근
-  // 방법 2: ?admin=focusmin0504 파라미터로 접근
-  const urlParams = new URLSearchParams(window.location.search);
-  const adminSecret = urlParams.get('admin');
-  const isAdminUrl = window.__adminAccess || window.location.pathname === '/admin' || adminSecret === 'focusmin0504';
+  // Check URL for admin page access — /admin URL only (no secret in URL params)
+  const isAdminUrl = window.__adminAccess || window.location.pathname === '/admin';
 
   // Start with 'auth' in Electron (skip landing page), 'landing' in browser
   const initialPage = isElectron ? 'auth' : 'landing';
@@ -38,10 +34,13 @@ export default function App() {
   const [paidUntil, setPaidUntil] = useState(null);
   const { toasts, showToast } = useToast();
 
-  // Fetch subscription status when userId changes
+  // Fetch subscription status when userId changes — uses auth token
   useEffect(() => {
     if (userId && isAuthenticated) {
-      fetch(`/api/subscription/status?userId=${encodeURIComponent(userId)}`)
+      auth.currentUser?.getIdToken()
+        .then(token => fetch('/api/subscription/status', {
+          headers: { 'Authorization': `Bearer ${token}` },
+        }))
         .then(res => res.json())
         .then(data => {
           setSubscriptionStatus(data.status || 'free');

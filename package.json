@@ -37,17 +37,17 @@
       "!src/web/index.html",
       "node_modules/**",
       "package.json",
-      ".env"
+      "!.env"
     ],
     "extraResources": [
       {
-        "from": ".env",
-        "to": ".env"
-      },
-      {
         "from": "KOR Video",
         "to": "app/KOR Video",
-        "filter": ["**/*.mp4", "**/*.webm", "**/*.mov"]
+        "filter": [
+          "**/*.mp4",
+          "**/*.webm",
+          "**/*.mov"
+        ]
       }
     ],
     "win": {
@@ -104,6 +104,7 @@
     "cors": "^2.8.5",
     "dotenv": "^17.4.2",
     "express": "^4.21.2",
+    "express-rate-limit": "^8.5.1",
     "firebase": "^12.12.1",
     "firebase-admin": "^13.8.0",
     "google-auth-library": "^10.6.2",

@@ -25,13 +25,17 @@ const F = {
   ui: '"Inter", sans-serif',
 };
 
-// Sync user to Firestore after Firebase Auth
-async function syncUser(uid, email, displayName) {
+// Sync user to Firestore after Firebase Auth — sends Firebase ID token for server verification
+async function syncUser(user, displayName) {
   try {
+    const token = await user.getIdToken();
     await fetch('/api/auth/ensure-user', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ uid, email, displayName }),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify({ displayName }),
     });
   } catch (err) {
     console.error('Failed to sync user:', err);
@@ -70,12 +74,10 @@ export default function Auth({ onSignIn }) {
 
       if (mode === 'signup') {
         userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        const { uid, email: userEmail } = userCredential.user;
-        await syncUser(uid, userEmail, displayName || email.split('@')[0]);
+        await syncUser(userCredential.user, displayName || email.split('@')[0]);
       } else {
         userCredential = await signInWithEmailAndPassword(auth, email, password);
-        // Also sync user on login (in case subscription status changed)
-        await syncUser(userCredential.user.uid, userCredential.user.email, userCredential.user.displayName || email.split('@')[0]);
+        await syncUser(userCredential.user, userCredential.user.displayName || email.split('@')[0]);
       }
 
       const { uid, email: userEmail } = userCredential.user;
@@ -96,7 +98,7 @@ export default function Auth({ onSignIn }) {
     try {
       const result = await signInWithPopup(auth, googleProvider);
       const { uid, email: userEmail, displayName: googleName } = result.user;
-      await syncUser(uid, userEmail, googleName);
+      await syncUser(result.user, googleName);
       localStorage.setItem('userId', uid);
       localStorage.setItem('displayName', googleName || userEmail.split('@')[0]);
       onSignIn(uid, userEmail);

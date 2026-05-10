@@ -146,7 +146,15 @@ const isYouTube = params.get('isYouTube') === 'true';
 // Show video if available or YouTube
 if (videoPath || isYouTube) {
   document.getElementById('videoContainer').classList.add('show');
-  document.getElementById('message').innerHTML = `Focus Moment: Watch this before continuing.<br><br><strong>${site}</strong> — ${mins} min spent here.`;
+  const msgEl = document.getElementById('message');
+  msgEl.textContent = '';
+  const line1 = document.createTextNode('Focus Moment: Watch this before continuing.');
+  const br1 = document.createElement('br');
+  const br2 = document.createElement('br');
+  const strong = document.createElement('strong');
+  strong.textContent = site;
+  const line2 = document.createTextNode(` — ${Number(mins)} min spent here.`);
+  msgEl.append(line1, br1, br2, strong, line2);
 
   // Set video source
   const video = document.getElementById('focusVideo');
@@ -194,7 +202,12 @@ if (videoPath || isYouTube) {
     video.play().catch(err => console.error('[POPUP] Unmuted play error:', err));
   }, 1000);
 } else {
-  document.getElementById('message').innerHTML = `${site} doesn't care about your deadline.<br>${mins} min spent here.`;
+  const msgEl2 = document.getElementById('message');
+  msgEl2.textContent = '';
+  const siteName = document.createTextNode(`${site} doesn't care about your deadline.`);
+  const brTag = document.createElement('br');
+  const minsText = document.createTextNode(`${Number(mins)} min spent here.`);
+  msgEl2.append(siteName, brTag, minsText);
 }
 
 async function backToWork() {

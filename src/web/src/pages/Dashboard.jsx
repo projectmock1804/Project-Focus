@@ -4,6 +4,7 @@ import 'react-datepicker/dist/react-datepicker.css';
 import MultiStageForm from '../components/MultiStageForm';
 import { SearchFilter, StatusFilter } from '../components/SearchFilter';
 import { getUserFriendlyErrorMessage } from '../utils/errorMessages';
+import { apiGet, apiPost, apiPut } from '../api.js';
 
 // =============================================================================
 // Design tokens — dark theme (screens.jsx spec)
@@ -1517,14 +1518,7 @@ function AddTaskInput({ onTaskAdded }) {
     setParsed(null);
 
     try {
-      const res = await fetch('/api/task/parse', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: trimmed, userId: 'default' }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Parse failed');
-
+      const data = await apiPost('/api/task/parse', { text: trimmed });
       setParsed(data.task);
       setStatus('success');
       setText('');
@@ -1697,13 +1691,7 @@ function DetailPanel({ task, sessionTotals, onClose, onRefreshTask }) {
     setSaveStatus('saving');
     setSaveError(null);
     try {
-      const res = await fetch(`/api/task/${task.id}/update`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(dataToSave),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to update task');
+      await apiPut(`/api/task/${task.id}/update`, dataToSave);
 
       setSaveStatus('saved');
       if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
@@ -1863,12 +1851,7 @@ function DetailPanel({ task, sessionTotals, onClose, onRefreshTask }) {
                   setEditData(newData);
                   setSaveStatus('saving');
                   try {
-                    const res = await fetch(`/api/task/${task.id}/update`, {
-                      method: 'PUT',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify(newData),
-                    });
-                    if (!res.ok) throw new Error('Failed to reopen task');
+                    await apiPut(`/api/task/${task.id}/update`, newData);
                     setSaveStatus('saved');
                     if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
                     saveTimeoutRef.current = setTimeout(() => setSaveStatus('idle'), 2000);
@@ -1904,12 +1887,7 @@ function DetailPanel({ task, sessionTotals, onClose, onRefreshTask }) {
                   setEditData(newData);
                   setSaveStatus('saving');
                   try {
-                    const res = await fetch(`/api/task/${task.id}/update`, {
-                      method: 'PUT',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify(newData),
-                    });
-                    if (!res.ok) throw new Error('Failed to update status');
+                    await apiPut(`/api/task/${task.id}/update`, newData);
                     setSaveStatus('saved');
                     if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
                     saveTimeoutRef.current = setTimeout(() => setSaveStatus('idle'), 2000);
@@ -2321,9 +2299,7 @@ export default function Dashboard({ onNavigateToTask, showToast = () => {}, onLo
       setLoading(true);
       setError(null);
       // Fetch all tasks including deleted (frontend filtering handles which to show)
-      const res = await fetch(`/api/tasks?userId=${encodeURIComponent(userId)}&includedeleted=true`);
-      if (!res.ok) throw new Error(`Server error: ${res.status}`);
-      const data = await res.json();
+      const data = await apiGet('/api/tasks?includedeleted=true');
       setTasks(data.tasks || []);
     } catch (err) {
       setError(err.message);
@@ -2336,7 +2312,7 @@ export default function Dashboard({ onNavigateToTask, showToast = () => {}, onLo
     if (selectedIds.size === 0) return;
     try {
       await Promise.all([...selectedIds].map(id =>
-        fetch(`/api/task/${id}/delete`, { method: 'POST' })
+        apiPost(`/api/task/${id}/delete`, {})
       ));
       setSelectedIds(new Set());
       setSelectedTask(null);
@@ -2374,34 +2350,10 @@ export default function Dashboard({ onNavigateToTask, showToast = () => {}, onLo
       console.log('Swapping to:', draggedTaskId, '←', targetPriority, 'and', targetTaskId, '←', draggedPriority);
 
       // Update both tasks with swapped priorities
-      const res1 = await fetch(`/api/task/${draggedTaskId}/update`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ priority: targetPriority }),
-      });
-      console.log(`Update dragged task (${draggedTaskId}):`, res1.status, res1.statusText);
-
-      const res2 = await fetch(`/api/task/${targetTaskId}/update`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ priority: draggedPriority }),
-      });
-      console.log(`Update target task (${targetTaskId}):`, res2.status, res2.statusText);
-
-      if (!res1.ok) {
-        const err1 = await res1.text();
-        console.error('API error for dragged task:', res1.status, err1);
-      }
-      if (!res2.ok) {
-        const err2 = await res2.text();
-        console.error('API error for target task:', res2.status, err2);
-      }
-
-      if (!res1.ok || !res2.ok) {
-        console.error('One or both API calls failed - aborting');
-        return;
-      }
-
+      await Promise.all([
+        apiPut(`/api/task/${draggedTaskId}/update`, { priority: targetPriority }),
+        apiPut(`/api/task/${targetTaskId}/update`, { priority: draggedPriority }),
+      ]);
       console.log('API updates successful, fetching tasks...');
       await fetchTasks();
       showToast('우선순위가 변경되었습니다', 'success');
@@ -2414,9 +2366,7 @@ export default function Dashboard({ onNavigateToTask, showToast = () => {}, onLo
 
   const fetchTaskProgress = useCallback(async (taskId) => {
     try {
-      const res = await fetch(`/api/task/${taskId}/progress`);
-      if (!res.ok) return;
-      const data = await res.json();
+      const data = await apiGet(`/api/task/${taskId}/progress`);
       setSessionTotals(data.session || null);
       const patch = {
         progress: data.progress,
@@ -2438,9 +2388,8 @@ export default function Dashboard({ onNavigateToTask, showToast = () => {}, onLo
       // Fetch progress for all tasks to aggregate session data
       for (const task of tasks) {
         try {
-          const res = await fetch(`/api/task/${task.id}/progress`);
-          if (res.ok) {
-            const data = await res.json();
+          const data = await apiGet(`/api/task/${task.id}/progress`);
+          if (data) {
             totalFocused += data.session?.focusedMinutes || 0;
             totalDistracted += data.session?.distractedMinutes || 0;
           }
@@ -2777,10 +2726,8 @@ export default function Dashboard({ onNavigateToTask, showToast = () => {}, onLo
                     onOpenDetail={onNavigateToTask}
                     onRestore={async (taskId) => {
                       try {
-                        const res = await fetch(`/api/task/${taskId}/restore`, { method: 'POST' });
-                        if (res.ok) {
-                          await fetchTasks();
-                        }
+                        await apiPost(`/api/task/${taskId}/restore`, {});
+                        await fetchTasks();
                       } catch (err) {
                         console.error('Restore failed:', err);
                       }
@@ -2881,13 +2828,7 @@ export default function Dashboard({ onNavigateToTask, showToast = () => {}, onLo
               onSubmit={async (formData) => {
                 setFormSubmitting(true);
                 try {
-                  const res = await fetch('/api/task/create-multi-stage', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ formData, userId }),
-                  });
-                  const data = await res.json();
-                  if (!res.ok) throw new Error(data.error || 'Failed to create task');
+                  const data = await apiPost('/api/task/create-multi-stage', { formData });
 
                   setShowFormModal(false);
                   setFormSubmitting(false);
